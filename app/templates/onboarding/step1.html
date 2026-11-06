@@ -1,0 +1,51 @@
+{% extends 'onboarding/base_onboarding.html' %}
+
+{% block onboarding_step %}
+<div style="text-align: center; margin-bottom: 40px;">
+    <div class="icon-circle icon-teal" style="margin: 0 auto 20px; width: 64px; height: 64px;">
+        <i data-lucide="target" style="width: 32px; height: 32px;"></i>
+    </div>
+    <h2 style="margin: 0; font-size: 2rem; font-weight: 800; color: var(--navy);">{{ _('What is your main goal?') }}</h2>
+    <p style="color: var(--slate); margin-top: 12px; font-size: 1.1rem;">{{ _('Choose the path that fits you best') }}</p>
+</div>
+
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <div style="display: grid; gap: 16px;">
+        <label class="goal-option">
+            <input type="radio" name="health_goal" value="lose_weight" required style="width: 20px; height: 20px; accent-color: var(--teal);">
+            <div>
+                <strong style="display: block; font-size: 1.1rem; color: var(--navy);">{{ _('Lose Weight') }}</strong>
+                <small style="color: var(--slate);">{{ _('Burn fat and reach your target weight') }}</small>
+            </div>
+        </label>
+        <label class="goal-option">
+            <input type="radio" name="health_goal" value="maintain_weight" style="width: 20px; height: 20px; accent-color: var(--teal);">
+            <div>
+                <strong style="display: block; font-size: 1.1rem; color: var(--navy);">{{ _('Maintain Weight') }}</strong>
+                <small style="color: var(--slate);">{{ _('Stay healthy and keep your current weight') }}</small>
+            </div>
+        </label>
+        <label class="goal-option">
+            <input type="radio" name="health_goal" value="gain_weight" style="width: 20px; height: 20px; accent-color: var(--teal);">
+            <div>
+                <strong style="display: block; font-size: 1.1rem; color: var(--navy);">{{ _('Gain Weight') }}</strong>
+                <small style="color: var(--slate);">{{ _('Build muscle and increase body mass') }}</small>
+            </div>
+        </label>
+        <label class="goal-option">
+            <input type="radio" name="health_goal" value="improve_nutrition" style="width: 20px; height: 20px; accent-color: var(--teal);">
+            <div>
+                <strong style="display: block; font-size: 1.1rem; color: var(--navy);">{{ _('Improve Nutrition') }}</strong>
+                <small style="color: var(--slate);">{{ _('Eat better and track your nutrients') }}</small>
+            </div>
+        </label>
+    </div>
+
+    <div style="margin-top: 40px;">
+        <button type="submit" class="btn" style="width: 100%; height: 56px; font-size: 1.1rem; font-weight: 700; box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.3);">
+            {{ _('Next') }} <i data-lucide="arrow-right" style="margin-left: 8px;"></i>
+        </button>
+    </div>
+</form>
+{% endblock %}

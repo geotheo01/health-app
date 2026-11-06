@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>{{ _('Meals') }}</h3>{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2><i data-lucide="utensils-crosshair"></i> {{ _('Meal Tracking') }}</h2>
+        <a href="{{ url_for('meals.create') }}" class="btn">
+            <i data-lucide="plus"></i> {{ _('Log a Meal') }}
+        </a>
+    </div>
+    
+    {% if meals %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ _('Date') }}</th>
+                    <th>{{ _('Type') }}</th>
+                    <th>{{ _('Title') }}</th>
+                    <th>{{ _('Calories') }}</th>
+                    <th>{{ _('Macros (P/C/F)') }}</th>
+                    <th>{{ _('Actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for meal in meals %}
+                <tr>
+                    <td>{{ meal.meal_date.strftime('%d/%m/%Y') if current_lang == 'el' else meal.meal_date.strftime('%b %d, %Y') }}</td>
+                    <td>
+                        <span style="text-transform: capitalize; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; 
+                            {% if meal.meal_type == 'breakfast' %} background: #fef9c3; color: #a16207; {% endif %}
+                            {% if meal.meal_type == 'lunch' %} background: #dcfce7; color: #15803d; {% endif %}
+                            {% if meal.meal_type == 'dinner' %} background: #dbeafe; color: #1d4ed8; {% endif %}
+                            {% if meal.meal_type == 'snack' %} background: #f3f4f6; color: #4b5563; {% endif %}">
+                            {{ _(meal.meal_type|capitalize) }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('meals.view', id=meal.id) }}" style="color: var(--teal); font-weight: 600; text-decoration: none;">
+                            {{ meal.title }}
+                        </a>
+                    </td>
+                    <td style="font-weight: 600;">{{ meal.total_calories|round(1) }} <small style="color: var(--slate); font-weight: 400;">kcal</small></td>
+                    <td style="color: var(--slate); font-size: 0.9rem;">
+                        {{ meal.total_protein|round(1) }}g / {{ meal.total_carbs|round(1) }}g / {{ meal.total_fat|round(1) }}g
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 8px;">
+                            <a href="{{ url_for('meals.edit', id=meal.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">
+                                <i data-lucide="edit-2" style="width: 14px; height: 14px;"></i> {{ _('Edit') }}
+                            </a>
+                            <a href="{{ url_for('meals.delete', id=meal.id) }}" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="return confirm('{{ _('Are you sure?') }}')">
+                                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div style="text-align: center; padding: 48px; color: var(--slate);">
+            <i data-lucide="utensils" style="width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.2;"></i>
+            <p>{{ _("You haven't logged any meals yet.") }}</p>
+            <a href="{{ url_for('meals.create') }}" class="btn btn-secondary">{{ _('Start Tracking') }}</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

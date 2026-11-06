@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>404 {{ _('Page Not Found') }}</h3>{% endblock %}
+{% block content %}
+<div class="card" style="text-align: center; padding: 40px;">
+    <h1 style="color: var(--teal); font-size: 4em; margin-bottom: 10px;">404</h1>
+    <h2>{{ _('Page Not Found') }}</h2>
+    <p style="color: #666; margin-bottom: 30px;">{{ _('The page you are looking for does not exist.') }}</p>
+    <a href="{{ url_for('main.index') }}" class="btn">{{ _('Return Home') }}</a>
+</div>
+{% endblock %}

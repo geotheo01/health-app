@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>{{ _('Edit User') }}</h3>{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2><i data-lucide="edit-3"></i> {{ _('Edit User Data') }}</h2>
+        <a href="{{ url_for('admin.users_list') }}" class="btn btn-secondary">
+            <i data-lucide="arrow-left"></i>
+            {{ _('Back') }}
+        </a>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin.edit_user', id=user.id) }}" class="auth-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <div class="form-group">
+            <label for="full_name">{{ _('Full Name') }}</label>
+            <input type="text" id="full_name" name="full_name" class="form-control" value="{{ user.full_name }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="username">{{ _('Username') }}</label>
+            <input type="text" id="username" name="username" class="form-control" value="{{ user.username }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="email">{{ _('Email Address') }}</label>
+            <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">{{ _('New Password (leave blank to keep current)') }}</label>
+            <input type="password" id="password" name="password" class="form-control" placeholder="{{ _('Enter new password') }}">
+            <small style="color: var(--slate); margin-top: 6px; display: block;">
+                {{ _('Only fill this if you want to force-change the user\'s password.') }}
+            </small>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 16px;">
+            <i data-lucide="save"></i>
+            {{ _('Save Changes') }}
+        </button>
+    </form>
+</div>
+{% endblock %}

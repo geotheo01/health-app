@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block auth_content %}
+<div class="center-wrapper">
+    <div class="card auth-card">
+        <div style="text-align: center; margin-bottom: 32px;">
+            <div class="icon-circle icon-teal" style="margin: 0 auto 16px;">
+                <i data-lucide="user-plus"></i>
+            </div>
+            <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--navy);">{{ _('Create Account') }}</h2>
+            <p style="color: var(--slate); margin-top: 8px;">{{ _('Get started with your personal health tracker today.') }}</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                <i data-lucide="alert-circle"></i>
+                {{ _(message) }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.register') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="form-group">
+                <label>{{ _('Full Name') }}</label>
+                <div style="position: relative;">
+                    <i data-lucide="user" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--slate);"></i>
+                    <input type="text" name="full_name" required style="padding-left: 44px;" placeholder="John Doe">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{ _('Username') }}</label>
+                <div style="position: relative;">
+                    <i data-lucide="at-sign" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--slate);"></i>
+                    <input type="text" name="username" required style="padding-left: 44px;" placeholder="johndoe">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{ _('Email Address') }}</label>
+                <div style="position: relative;">
+                    <i data-lucide="mail" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--slate);"></i>
+                    <input type="email" name="email" required style="padding-left: 44px;" placeholder="name@example.com">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{ _('Password') }}</label>
+                <div style="position: relative;">
+                    <i data-lucide="key" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--slate);"></i>
+                    <input type="password" name="password" required style="padding-left: 44px;" placeholder="••••••••">
+                </div>
+            </div>
+            <button type="submit" class="btn" style="width: 100%; height: 48px; margin-top: 8px;">
+                {{ _('Register') }}
+            </button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+            <p style="color: var(--slate); font-size: 0.95rem;">
+                {{ _('Already have an account?') }} 
+                <a href="{{ url_for('auth.login') }}" style="color: var(--teal); font-weight: 600; text-decoration: none;">{{ _('Sign In') }}</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>{{ _('Health History') }}</h3>{% endblock %}
+
+{% block content %}
+<div class="card">
+    <form method="GET" action="{{ url_for('history.index') }}" style="display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap;">
+        <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 200px;">
+            <label><i data-lucide="calendar"></i> {{ _('Date Range') }}</label>
+            <select name="range" id="range-select" onchange="toggleCustomDates()">
+                <option value="7days" {{ 'selected' if current_range == '7days' else '' }}>{{ _('Last 7 Days') }}</option>
+                <option value="30days" {{ 'selected' if current_range == '30days' else '' }}>{{ _('Last 30 Days') }}</option>
+                <option value="custom" {{ 'selected' if current_range == 'custom' else '' }}>{{ _('Custom Range') }}</option>
+            </select>
+        </div>
+        
+        <div id="custom-dates" style="display: {{ 'flex' if current_range == 'custom' else 'none' }}; gap: 15px; flex: 2; min-width: 300px;">
+            <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                <label>{{ _('Start Date') }}</label>
+                <input type="date" name="start_date" value="{{ request.args.get('start_date', '') }}">
+            </div>
+            <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                <label>{{ _('End Date') }}</label>
+                <input type="date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+            </div>
+        </div>
+        
+        <button type="submit" class="btn" style="height: 48px; padding: 0 32px;">
+            <i data-lucide="filter"></i> {{ _('Filter') }}
+        </button>
+    </form>
+</div>
+
+<div class="card">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+        <h2><i data-lucide="table"></i> {{ _('Summary Data') }}</h2>
+        <span style="font-size: 0.9rem; color: var(--slate); font-weight: 500;">
+            {{ data.start_date }} &mdash; {{ data.end_date }}
+        </span>
+    </div>
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ _('Date') }}</th>
+                    <th>{{ _('Calories') }}</th>
+                    <th>{{ _('Water') }}</th>
+                    <th>{{ _('Sleep') }}</th>
+                    <th>{{ _('Exercise') }}</th>
+                    <th>{{ _('Meals') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in data.history %}
+                <tr>
+                    <td><strong>{{ day.date.strftime('%d/%m/%Y') if current_lang == 'el' else day.date.strftime('%b %d, %Y') }}</strong></td>
+                    <td style="font-weight: 600;">{{ day.total_calories|round(0) }} <small style="color: var(--slate); font-weight: 400;">kcal</small></td>
+                    <td>{{ day.water }} <small style="color: var(--slate);">L</small></td>
+                    <td>{{ day.sleep }} <small style="color: var(--slate);">h</small></td>
+                    <td>{{ day.exercise }} <small style="color: var(--slate);">min</small></td>
+                    <td>
+                        <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 500;">
+                            {{ day.meals|length }} {{ _('meals') }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
+    <div class="card">
+        <h2 style="margin-bottom: 20px;"><i data-lucide="moon"></i> {{ _('Sleep Pattern') }}</h2>
+        <div style="position: relative; height: 300px;">
+            <canvas id="sleepChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <h2 style="margin-bottom: 20px;"><i data-lucide="activity"></i> {{ _('Exercise Activity') }}</h2>
+        <div style="position: relative; height: 300px;">
+            <canvas id="exerciseChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Correlation Dashboard -->
+<h3 style="font-size: 1.3rem; font-weight: 700; color: var(--text-main); margin: 32px 0 20px 0; display: flex; align-items: center; gap: 8px;">
+    <i data-lucide="trending-up" style="color: var(--teal);"></i>
+    {{ _('Correlation Dashboard') }}
+</h3>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
+    <div class="card">
+        <h2 style="margin-bottom: 20px;"><i data-lucide="bar-chart-2"></i> {{ _('Sleep vs Mood') }}</h2>
+        <div style="position: relative; height: 300px;">
+            <canvas id="sleepMoodChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <h2 style="margin-bottom: 20px;"><i data-lucide="line-chart"></i> {{ _('Exercise vs Sleep') }}</h2>
+        <div style="position: relative; height: 300px;">
+            <canvas id="exerciseSleepChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+function toggleCustomDates() {
+    var select = document.getElementById('range-select');
+    var customDiv = document.getElementById('custom-dates');
+    if (select.value === 'custom') {
+        customDiv.style.display = 'flex';
+    } else {
+        customDiv.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    let queryParams = '?range=' + (params.get('range') || '7days');
+    if (params.get('start_date')) queryParams += '&start_date=' + params.get('start_date');
+    if (params.get('end_date')) queryParams += '&end_date=' + params.get('end_date');
+
+    const fetchChartData = async (metric) => {
+        const response = await fetch(`/api/charts/${metric}${queryParams}`);
+        return await response.json();
+    };
+
+    const initCharts = async () => {
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    displayColors: false
+                }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    border: { display: false }, 
+                    grid: { color: '#f1f5f9' },
+                    ticks: { color: '#64748b', font: { size: 11 } }
+                },
+                x: { 
+                    border: { display: false }, 
+                    grid: { display: false },
+                    ticks: { color: '#64748b', font: { size: 11 } }
+                }
+            }
+        };
+
+        const sleepData = await fetchChartData('sleep');
+        new Chart(document.getElementById('sleepChart'), {
+            type: 'line',
+            data: {
+                labels: sleepData.labels,
+                datasets: [{
+                    data: sleepData.values,
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#8b5cf6'
+                }]
+            },
+            options: commonOptions
+        });
+
+        const exerciseData = await fetchChartData('exercise');
+        new Chart(document.getElementById('exerciseChart'), {
+            type: 'bar',
+            data: {
+                labels: exerciseData.labels,
+                datasets: [{
+                    data: exerciseData.values,
+                    backgroundColor: '#f59e0b',
+                    borderRadius: 6
+                }]
+            },
+            options: commonOptions
+        });
+
+        // Sleep vs Mood Dual Y-Axis Chart
+        const sleepMoodData = await fetch(`/api/charts/correlation/sleep_mood${queryParams}`).then(r => r.json());
+        new Chart(document.getElementById('sleepMoodChart'), {
+            type: 'line',
+            data: {
+                labels: sleepMoodData.labels,
+                datasets: [
+                    {
+                        label: 'Sleep Hours',
+                        data: sleepMoodData.sleep,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'transparent',
+                        yAxisID: 'y',
+                        tension: 0.4,
+                        pointRadius: 4
+                    },
+                    {
+                        label: 'Mood Score',
+                        data: sleepMoodData.mood,
+                        borderColor: '#10b981',
+                        backgroundColor: 'transparent',
+                        yAxisID: 'y1',
+                        tension: 0.4,
+                        pointRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top', labels: { color: '#64748b' } }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        grid: { color: '#f1f5f9' },
+                        title: { display: true, text: 'Sleep (hours)', color: '#64748b' },
+                        ticks: { color: '#64748b' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        title: { display: true, text: 'Mood (1-10)', color: '#64748b' },
+                        ticks: { color: '#64748b' },
+                        min: 0,
+                        max: 10
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#64748b' }
+                    }
+                }
+            }
+        });
+
+        // Exercise vs Sleep Dual Y-Axis Chart
+        const exerciseSleepData = await fetch(`/api/charts/correlation/exercise_sleep${queryParams}`).then(r => r.json());
+        new Chart(document.getElementById('exerciseSleepChart'), {
+            type: 'line',
+            data: {
+                labels: exerciseSleepData.labels,
+                datasets: [
+                    {
+                        label: 'Exercise (mins)',
+                        data: exerciseSleepData.exercise,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'transparent',
+                        yAxisID: 'y',
+                        tension: 0.4,
+                        pointRadius: 4
+                    },
+                    {
+                        label: 'Sleep Hours',
+                        data: exerciseSleepData.sleep,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'transparent',
+                        yAxisID: 'y1',
+                        tension: 0.4,
+                        pointRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top', labels: { color: '#64748b' } }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        grid: { color: '#f1f5f9' },
+                        title: { display: true, text: 'Exercise (mins)', color: '#64748b' },
+                        ticks: { color: '#64748b' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        title: { display: true, text: 'Sleep (hours)', color: '#64748b' },
+                        ticks: { color: '#64748b' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#64748b' }
+                    }
+                }
+            }
+        });
+    };
+    initCharts();
+});
+</script>
+{% endblock %}

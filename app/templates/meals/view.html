@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>{{ _('Meal Details') }}</h3>{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; flex-wrap: wrap; gap: 24px;">
+        <div style="display: flex; gap: 32px; flex-wrap: wrap;">
+            {% if meal.image_path %}
+                <div style="position: relative; width: 240px;">
+                    <img src="{{ url_for('static', filename=meal.image_path) }}" alt="{{ meal.title }}" 
+                          style="width: 240px; height: 240px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow);">
+                    <div style="margin-top: 16px;">
+                        <form method="POST" action="{{ url_for('meals.analyze_image', id=meal.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn" style="width: 100%; background-color: var(--navy); color: white;">
+                                <i data-lucide="sparkles"></i> {{ _('Analyze with AI') }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div style="width: 240px; height: 240px; background: var(--off-white); border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed var(--border); color: var(--slate);">
+                    <i data-lucide="image" style="width: 48px; height: 48px; opacity: 0.2; margin-bottom: 12px;"></i>
+                    <span style="font-size: 0.9rem;">{{ _('No photo uploaded') }}</span>
+                    <a href="{{ url_for('meals.edit', id=meal.id) }}" style="margin-top: 12px; font-size: 0.85rem; color: var(--teal); font-weight: 600;">{{ _('Add Photo') }}</a>
+                </div>
+            {% endif %}
+            
+            <div style="flex: 1; min-width: 300px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                    <span style="text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; font-weight: 700; color: var(--teal); background: var(--mint); padding: 4px 10px; border-radius: var(--radius-full);">
+                        {{ _(meal.meal_type|capitalize) }}
+                    </span>
+                    <span style="color: var(--slate); font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                        <i data-lucide="calendar" style="width: 16px; height: 16px;"></i>
+                        {{ meal.meal_date.strftime('%d/%m/%Y') if current_lang == 'el' else meal.meal_date.strftime('%B %d, %Y') }}
+                    </span>
+                </div>
+                <h1 style="margin: 0 0 16px 0; font-size: 2.25rem; font-weight: 800; color: var(--navy);">{{ meal.title }}</h1>
+                
+                {% if meal.ai_confidence %}
+                <div style="background: linear-gradient(to right, #f0fdfa, transparent); border-left: 4px solid var(--teal); padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <i data-lucide="bot" style="color: var(--teal); width: 20px; height: 20px;"></i>
+                        <strong style="color: var(--teal-dark);">{{ _('AI Nutritional Insights') }}</strong>
+                        <span style="background: rgba(13, 148, 136, 0.1); color: var(--teal-dark); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                            {{ (meal.ai_confidence * 100)|round }}% {{ _('CONFIDENCE') }}
+                        </span>
+                    </div>
+                    <p style="margin: 0; font-size: 0.9rem; color: var(--navy-light); line-height: 1.5;">
+                        {{ _('This breakdown was automatically estimated by our AI using computer vision. Always verify with packaging when possible.') }}
+                    </p>
+                </div>
+                {% endif %}
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px;">
+                    <div class="stat-card" style="padding: 16px; align-items: center; background: #fffbeb; border-color: #fef3c7;">
+                        <span style="color: #d97706; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">{{ _('Calories') }}</span>
+                        <span style="font-size: 1.5rem; font-weight: 800;">{{ meal.total_calories|round(0) }}</span>
+                    </div>
+                    <div class="stat-card" style="padding: 16px; align-items: center; background: #f0fdf4; border-color: #dcfce7;">
+                        <span style="color: #16a34a; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">{{ _('Protein') }}</span>
+                        <span style="font-size: 1.5rem; font-weight: 800;">{{ meal.total_protein|round(1) }}<small style="font-size: 0.8rem; font-weight: 400;">g</small></span>
+                    </div>
+                    <div class="stat-card" style="padding: 16px; align-items: center; background: #eff6ff; border-color: #dbeafe;">
+                        <span style="color: #2563eb; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">{{ _('Carbs') }}</span>
+                        <span style="font-size: 1.5rem; font-weight: 800;">{{ meal.total_carbs|round(1) }}<small style="font-size: 0.8rem; font-weight: 400;">g</small></span>
+                    </div>
+                    <div class="stat-card" style="padding: 16px; align-items: center; background: #fef2f2; border-color: #fecaca;">
+                        <span style="color: #dc2626; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">{{ _('Fat') }}</span>
+                        <span style="font-size: 1.5rem; font-weight: 800;">{{ meal.total_fat|round(1) }}<small style="font-size: 0.8rem; font-weight: 400;">g</small></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <a href="{{ url_for('meals.edit', id=meal.id) }}" class="btn btn-secondary">
+                <i data-lucide="edit-3"></i> {{ _('Edit') }}
+            </a>
+            <a href="{{ url_for('meals.list_meals') }}" class="btn btn-secondary">
+                <i data-lucide="arrow-left"></i> {{ _('Back') }}
+            </a>
+        </div>
+    </div>
+
+    <div style="margin-top: 40px;">
+        <h2 style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+            <i data-lucide="list"></i> {{ _('Food Items Breakdown') }}
+        </h2>
+        {% if meal.items %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ _('Food Item') }}</th>
+                        <th>{{ _('Quantity') }}</th>
+                        <th>{{ _('Calories') }}</th>
+                        <th>{{ _('Protein (g)') }}</th>
+                        <th>{{ _('Carbs (g)') }}</th>
+                        <th>{{ _('Fat (g)') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in meal.items %}
+                    <tr>
+                        <td><strong>{{ item.food_name }}</strong></td>
+                        <td>{{ item.quantity }}</td>
+                        <td style="font-weight: 600;">{{ item.calories|round(1) }}</td>
+                        <td>{{ item.protein|round(1) }}</td>
+                        <td>{{ item.carbs|round(1) }}</td>
+                        <td>{{ item.fat|round(1) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <div style="text-align: center; padding: 40px; background: var(--off-white); border-radius: var(--radius); color: var(--slate);">
+                {{ _('No detailed items logged.') }}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

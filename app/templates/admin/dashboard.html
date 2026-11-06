@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>{{ _('System Admin Panel') }}</h3>{% endblock %}
+
+{% block extra_head %}
+<style>
+    .heatmap-tile:hover {
+        transform: scale(1.2);
+        box-shadow: 0 0 8px rgba(13, 148, 136, 0.4);
+        z-index: 10;
+    }
+    .heatmap-0 { background-color: var(--border); }
+    [data-theme="dark"] .heatmap-0 { background-color: #334155; }
+    
+    .heatmap-1 { background-color: #ccfbf1; }
+    [data-theme="dark"] .heatmap-1 { background-color: #115e59; }
+    
+    .heatmap-2 { background-color: #99f6e4; }
+    [data-theme="dark"] .heatmap-2 { background-color: #134e4a; }
+    
+    .heatmap-3 { background-color: #2dd4bf; }
+    .heatmap-4 { background-color: #0d9488; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="background: linear-gradient(135deg, var(--navy), var(--navy-light)); color: white; border: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 32px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 300px;">
+            <h1 style="margin: 0; font-size: 2rem; font-weight: 700;">{{ _('Admin Overview') }}</h1>
+            <p style="margin: 12px 0 0 0; opacity: 0.9; font-size: 1.1rem;">
+                {{ _('Monitoring system activity and user engagement.') }}
+            </p>
+        </div>
+        <div style="display: flex; gap: 16px;">
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 16px 24px; border-radius: var(--radius); border: 1px solid rgba(255, 255, 255, 0.2); text-align: center;">
+                <span style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.7; margin-bottom: 4px;">{{ _('Total Users') }}</span>
+                <span style="font-size: 2rem; font-weight: 800;">{{ stats.total_users }}</span>
+            </div>
+            <div style="background: rgba(45, 212, 191, 0.2); padding: 16px 24px; border-radius: var(--radius); border: 1px solid rgba(45, 212, 191, 0.3); text-align: center;">
+                <span style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teal-light); margin-bottom: 4px;">{{ _('Active') }}</span>
+                <span style="font-size: 2rem; font-weight: 800; color: var(--teal-light);">{{ stats.active_users }}</span>
+            </div>
+            <div style="background: rgba(239, 68, 68, 0.1); padding: 16px 24px; border-radius: var(--radius); border: 1px solid rgba(239, 68, 68, 0.2); text-align: center;">
+                <span style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #ef4444; margin-bottom: 4px;">{{ _('Inactive') }}</span>
+                <span style="font-size: 2rem; font-weight: 800; color: #ef4444;">{{ stats.inactive_users }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Logs -->
+    <div class="stat-card">
+        <div class="icon-circle" style="background: #fef3c7; color: #d97706;">
+            <i data-lucide="file-text"></i>
+        </div>
+        <span class="label">{{ _('Daily Logs') }}</span>
+        <span class="value">{{ stats.total_logs }}</span>
+    </div>
+
+    <!-- Meals -->
+    <div class="stat-card">
+        <div class="icon-circle" style="background: #dcfce7; color: #15803d;">
+            <i data-lucide="utensils"></i>
+        </div>
+        <span class="label">{{ _('Meals Tracked') }}</span>
+        <span class="value">{{ stats.total_meals }}</span>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="stat-card">
+        <div class="icon-circle" style="background: #f3e8ff; color: #7e22ce;">
+            <i data-lucide="sparkles"></i>
+        </div>
+        <span class="label">{{ _('AI Tips') }}</span>
+        <span class="value">{{ stats.total_recommendations }}</span>
+    </div>
+</div>
+
+<!-- Advanced Analytics Section -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 24px;">
+    <!-- Heatmap Card -->
+    <div class="card" style="grid-column: span 2; min-width: 100%;">
+        <h2><i data-lucide="calendar" style="color: var(--teal);"></i> {{ _('System Activity Heatmap (Last 30 Days)') }}</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: -12px; margin-bottom: 20px;">
+            {{ _('Visualizing system-wide daily logs and meal entries.') }}
+        </p>
+        
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 12px; background: var(--off-white); border-radius: var(--radius); justify-content: center; border: 1px solid var(--border);">
+            {% for day in stats.heatmap %}
+                {% set intensity_class = 'heatmap-0' %}
+                {% if day.count >= 7 %}
+                    {% set intensity_class = 'heatmap-4' %}
+                {% elif day.count >= 5 %}
+                    {% set intensity_class = 'heatmap-3' %}
+                {% elif day.count >= 3 %}
+                    {% set intensity_class = 'heatmap-2' %}
+                {% elif day.count >= 1 %}
+                    {% set intensity_class = 'heatmap-1' %}
+                {% endif %}
+                <div class="heatmap-tile {{ intensity_class }}" 
+                     style="width: 24px; height: 24px; border-radius: 4px; cursor: pointer; transition: transform 0.2s;"
+                     data-date="{{ day.date }}"
+                     data-count="{{ day.count }}"
+                     title="{{ day.date }}: {{ day.count }} {{ _('activities') }}">
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Legend -->
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 12px; font-size: 0.8rem; color: var(--text-muted);">
+            <span>{{ _('Less') }}</span>
+            <div style="width: 12px; height: 12px; border-radius: 2px; background: var(--border);"></div>
+            <div style="width: 12px; height: 12px; border-radius: 2px; background: #ccfbf1;"></div>
+            <div style="width: 12px; height: 12px; border-radius: 2px; background: #99f6e4;"></div>
+            <div style="width: 12px; height: 12px; border-radius: 2px; background: #2dd4bf;"></div>
+            <div style="width: 12px; height: 12px; border-radius: 2px; background: #0d9488;"></div>
+            <span>{{ _('More') }}</span>
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px; margin-bottom: 24px;">
+    <!-- Role Distribution Card -->
+    <div class="card">
+        <h2><i data-lucide="pie-chart" style="color: var(--teal);"></i> {{ _('User Role Distribution') }}</h2>
+        <div style="position: relative; height: 220px; display: flex; align-items: center; justify-content: center;">
+            <canvas id="adminRolesChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Peak Hours Card -->
+    <div class="card">
+        <h2><i data-lucide="clock" style="color: var(--blue);"></i> {{ _('Peak Activity Hours') }}</h2>
+        <div style="position: relative; height: 220px;">
+            <canvas id="adminHoursChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2><i data-lucide="users"></i> {{ _('Latest Registered Users') }}</h2>
+        <a href="{{ url_for('admin.users_list') }}" class="btn btn-secondary">
+            <i data-lucide="arrow-right"></i> {{ _('Manage Users') }}
+        </a>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ _('Full Name') }}</th>
+                    <th>{{ _('Email') }}</th>
+                    <th>{{ _('Role') }}</th>
+                    <th>{{ _('Status') }}</th>
+                    <th>{{ _('Joined Date') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in stats.latest_users %}
+                <tr>
+                    <td><strong>{{ u.full_name }}</strong></td>
+                    <td>{{ u.email }}</td>
+                    <td>
+                        <span style="padding: 4px 10px; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; 
+                            background: {{ '#e0f2fe' if u.role == 'admin' else '#f1f5f9' }}; 
+                            color: {{ '#0369a1' if u.role == 'admin' else '#475569' }};">
+                            {{ _('Admin') if u.role == 'admin' else _('User') }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 8px; height: 8px; border-radius: 50%; background: {{ '#10b981' if u.is_active else '#ef4444' }};"></div>
+                            <span style="font-weight: 500; color: {{ '#059669' if u.is_active else '#dc2626' }};">
+                                {{ _('Active') if u.is_active else _('Inactive') }}
+                            </span>
+                        </div>
+                    </td>
+                    <td style="color: var(--slate); font-size: 0.9rem;">{{ u.created_at.strftime('%d/%m/%Y') if current_lang == 'el' else u.created_at.strftime('%b %d, %Y') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const currentLang = document.documentElement.lang || 'el';
+    const textMain = getComputedStyle(document.documentElement).getPropertyValue('--text-main').trim() || '#0f172a';
+
+    // 1. Roles Chart
+    const rolesCtx = document.getElementById('adminRolesChart');
+    if (rolesCtx) {
+        const labels = currentLang === 'el' ? ['Διαχειριστές', 'Χρήστες'] : ['Admins', 'Users'];
+        new Chart(rolesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: [{{ stats.role_stats.admin }}, {{ stats.role_stats.user }}],
+                    backgroundColor: ['#0d9488', '#64748b'],
+                    borderWidth: 0,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: textMain,
+                            font: { family: 'Outfit', size: 12, weight: '500' }
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+
+    // 2. Hours Chart
+    const hoursCtx = document.getElementById('adminHoursChart');
+    if (hoursCtx) {
+        const hourLabels = Array.from({length: 24}, (_, i) => `${i}:00`);
+        const hourData = {{ stats.peak_hours }};
+        new Chart(hoursCtx, {
+            type: 'bar',
+            data: {
+                labels: hourLabels,
+                datasets: [{
+                    label: currentLang === 'el' ? 'Δραστηριότητα (Ώρα)' : 'Activity (Hour)',
+                    data: hourData,
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        ticks: { color: '#64748b', font: { size: 10 } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 9 } }
+                    }
+                }
+            }
+        });
+    }
+
+    // Tooltip logic for heatmap tiles
+    const tiles = document.querySelectorAll('.heatmap-tile');
+    tiles.forEach(tile => {
+        tile.addEventListener('click', () => {
+            const date = tile.getAttribute('data-date');
+            const count = tile.getAttribute('data-count');
+            const currentLang = document.documentElement.lang || 'el';
+            const msg = currentLang === 'el' 
+                ? `Στις ${date} καταγράφηκαν ${count} δραστηριότητες.`
+                : `On ${date}, ${count} activities were logged.`;
+            if (typeof showToast === 'function') {
+                showToast(msg, 'activity');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

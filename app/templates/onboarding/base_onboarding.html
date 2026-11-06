@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block body_content %}
+<div class="center-wrapper">
+    <div class="onboarding-container">
+        <div style="margin-bottom: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 4px;">
+                <span style="font-size: 0.85rem; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 0.05em;">{{ _('Step') }} {{ step }} {{ _('of 5') }}</span>
+                <span style="font-size: 0.85rem; font-weight: 600; color: var(--slate);">{{ (step / 5 * 100) | int }}% {{ _('Complete') }}</span>
+            </div>
+            <div class="onboarding-progress-bar">
+                <div class="onboarding-progress-fill" style="width: {{ (step / 5 * 100) }}%;"></div>
+            </div>
+        </div>
+
+        <div class="onboarding-card">
+            {% block onboarding_step %}{% endblock %}
+        </div>
+
+        <div style="text-align: center; margin-top: 32px;">
+            <p style="color: var(--slate); font-size: 0.9rem; font-weight: 500;">
+                <i data-lucide="help-circle" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i>
+                {{ _('Need help?') }} <a href="#" style="color: var(--teal); text-decoration: none; font-weight: 600;">{{ _('Contact Support') }}</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

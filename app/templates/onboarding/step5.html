@@ -1,0 +1,95 @@
+{% extends 'onboarding/base_onboarding.html' %}
+
+{% block onboarding_step %}
+<div style="text-align: center; margin-bottom: 40px;">
+    <div class="icon-circle icon-teal" style="margin: 0 auto 20px; width: 64px; height: 64px;">
+        <i data-lucide="award" style="width: 32px; height: 32px;"></i>
+    </div>
+    <h2 style="margin: 0; font-size: 2rem; font-weight: 800; color: var(--navy);">{{ _('Your Initial Goals') }}</h2>
+    <p style="color: var(--slate); margin-top: 12px; font-size: 1.1rem;">{{ _("Let's set some targets to get started") }}</p>
+</div>
+
+<div style="background-color: #f0fdfa; border-radius: 16px; padding: 24px; margin-bottom: 32px; border: 2px dashed var(--teal); display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+    <div>
+        <h4 style="margin: 0; color: var(--teal); font-size: 1.1rem; font-weight: 700;">{{ _('Suggested for you') }}</h4>
+        <p style="margin: 4px 0 0; font-size: 0.9rem; color: var(--slate); font-weight: 500;">{{ _('Based on your body metrics and activity') }}</p>
+    </div>
+    <button type="button" id="use-suggested" class="btn btn-secondary" style="font-size: 0.9rem; padding: 10px 20px; border-radius: 10px; border: 1px solid var(--teal); color: var(--teal); background: white;">
+        {{ _('Apply Suggested') }}
+    </button>
+</div>
+
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    
+    <div class="form-group">
+        <label style="font-weight: 600; color: var(--navy);">{{ _('Daily Calorie Goal (kcal)') }}</label>
+        <input type="number" id="calorie_goal" name="daily_calorie_goal" required min="500" max="10000" placeholder="e.g. 2000" style="height: 48px; border-radius: 12px; border: 2px solid var(--border);">
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="form-group">
+            <label style="font-weight: 600; color: var(--navy);">{{ _('Daily Water Goal (Liters)') }}</label>
+            <input type="number" id="water_goal" name="daily_water_goal" required step="0.1" min="0" placeholder="e.g. 2.5" style="height: 48px; border-radius: 12px; border: 2px solid var(--border);">
+        </div>
+        <div class="form-group">
+            <label style="font-weight: 600; color: var(--navy);">{{ _('Daily Sleep Goal (Hours)') }}</label>
+            <input type="number" id="sleep_goal" name="daily_sleep_goal" required step="0.5" min="0" max="24" placeholder="e.g. 8" style="height: 48px; border-radius: 12px; border: 2px solid var(--border);">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label style="font-weight: 600; color: var(--navy);">{{ _('Weekly Exercise Goal (Minutes)') }}</label>
+        <input type="number" id="exercise_goal" name="weekly_exercise_goal" required min="0" placeholder="e.g. 150" style="height: 48px; border-radius: 12px; border: 2px solid var(--border);">
+    </div>
+
+    <div style="display: flex; gap: 16px; margin-top: 40px;">
+        <a href="{{ url_for('onboarding.step', step_num=4) }}" class="btn btn-secondary" style="flex: 1; height: 56px; border-radius: 12px; font-weight: 600;">{{ _('Back') }}</a>
+        <button type="submit" class="btn" style="flex: 2; height: 56px; border-radius: 12px; font-weight: 700; box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.3);">
+            {{ _('Finish & Launch') }} <i data-lucide="rocket" style="margin-left: 8px;"></i>
+        </button>
+    </div>
+</form>
+
+<script>
+    // Celebration!
+    window.addEventListener('load', () => {
+        const duration = 3 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        const interval = setInterval(function() {
+            const timeLeft = animationEnd - Date.now();
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+
+            const particleCount = 50 * (timeLeft / duration);
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+        }, 250);
+    });
+
+    document.getElementById('use-suggested').addEventListener('click', function() {
+        document.getElementById('calorie_goal').value = "{{ suggested_goals.daily_calorie_goal }}";
+        document.getElementById('water_goal').value = "{{ suggested_goals.daily_water_goal }}";
+        document.getElementById('sleep_goal').value = "{{ suggested_goals.daily_sleep_goal }}";
+        document.getElementById('exercise_goal').value = "{{ suggested_goals.weekly_exercise_goal }}";
+        
+        const currentLang = document.documentElement.lang || 'el';
+        const appliedText = currentLang === 'el' ? 'Εφαρμόστηκε' : 'Applied';
+
+        // Add a small visual feedback
+        this.innerHTML = `<i data-lucide="check" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;"></i> ${appliedText}`;
+        this.style.backgroundColor = 'var(--mint)';
+        this.style.color = 'var(--teal)';
+        this.style.borderColor = 'var(--teal)';
+        lucide.createIcons();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>{{ _('Edit Goals') }}</h3>{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div style="margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 20px;">
+        <h2 style="margin: 0; display: flex; align-items: center; gap: 12px;">
+            <i data-lucide="target" style="color: var(--teal);"></i>
+            {{ _('Define Your Wellness Targets') }}
+        </h2>
+        <p style="color: var(--slate); margin-top: 8px;">{{ _('Setting clear goals is the first step towards a healthier you.') }}</p>
+    </div>
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px;">
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <div class="form-group">
+                    <label><i data-lucide="flame" style="width: 16px;"></i> {{ _('Daily Calorie Goal (kcal)') }}</label>
+                    <input type="number" name="daily_calorie_goal" value="{{ goal.daily_calorie_goal if goal else '' }}" min="0" placeholder="e.g. 2000">
+                </div>
+                <div class="form-group">
+                    <label><i data-lucide="droplet" style="width: 16px;"></i> {{ _('Daily Water Goal (Liters)') }}</label>
+                    <input type="number" step="0.1" name="daily_water_goal" value="{{ goal.daily_water_goal if goal else '' }}" min="0" placeholder="e.g. 2.5">
+                </div>
+                <div class="form-group">
+                    <label><i data-lucide="moon" style="width: 16px;"></i> {{ _('Daily Sleep Goal (Hours)') }}</label>
+                    <input type="number" step="0.1" name="daily_sleep_goal" value="{{ goal.daily_sleep_goal if goal else '' }}" min="0" placeholder="e.g. 8">
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <div class="form-group">
+                    <label><i data-lucide="timer" style="width: 16px;"></i> {{ _('Weekly Exercise Goal (Minutes)') }}</label>
+                    <input type="number" name="weekly_exercise_goal" value="{{ goal.weekly_exercise_goal if goal else '' }}" min="0" placeholder="e.g. 150">
+                </div>
+                <div class="form-group">
+                    <label><i data-lucide="scale" style="width: 16px;"></i> {{ _('Target Weight (kg)') }}</label>
+                    <input type="number" step="0.1" name="target_weight" value="{{ goal.target_weight if goal else '' }}" min="40" max="230" placeholder="e.g. 75">
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 16px; border-top: 1px solid var(--border); padding-top: 32px; margin-top: 32px;">
+            <button type="submit" class="btn" style="padding: 12px 32px; font-size: 1rem;">
+                <i data-lucide="check-circle"></i> {{ _('Save Goals') }}
+            </button>
+            <a href="{{ url_for('goals.view') }}" class="btn btn-secondary" style="padding: 12px 32px; font-size: 1rem;">
+                {{ _('Cancel') }}
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

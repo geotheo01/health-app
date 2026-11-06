@@ -1,0 +1,526 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>{{ _('Dashboard Overview') }}</h3>{% endblock %}
+
+{% block extra_head %}
+<style>
+    .stat-card-premium {
+        background-color: var(--card-bg);
+        border-radius: var(--radius);
+        padding: 24px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: var(--text-main);
+    }
+    .stat-card-premium:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    .progress-ring-container {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .progress-ring {
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+    }
+    .progress-ring-circle {
+        transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .progress-ring-icon {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+    }
+    .stat-card-premium:hover .progress-ring-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+    .progress-ring-icon svg, .progress-ring-icon i {
+        width: 26px;
+        height: 26px;
+    }
+    .stat-card-premium .label {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .stat-card-premium .value-container {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+        margin-bottom: 6px;
+    }
+    .stat-card-premium .value-main {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+    .stat-card-premium .value-unit {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    .stat-card-premium .target-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    .stat-card-premium .target-label strong {
+        color: var(--text-main);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="background: linear-gradient(135deg, var(--teal), var(--teal-dark)); color: white; border: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 32px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 300px;">
+            <h1 style="margin: 0; font-size: 2rem; font-weight: 700;">{{ _('Welcome back, {name}!', name=user.full_name) }}</h1>
+            <div style="display: flex; align-items: center; gap: 16px; margin-top: 16px;">
+                <p style="margin: 0; opacity: 0.9; font-size: 1.1rem;">
+                    {{ _('Today is') }} <strong>{{ data.today.strftime('%d/%m/%Y') if current_lang == 'el' else data.today.strftime('%B %d, %Y') }}</strong>.
+                </p>
+                {% if data.streak > 0 %}
+                <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 1rem;">
+                    <i data-lucide="flame" style="width: 20px; height: 20px; color: #fb923c; fill: #fb923c;"></i>
+                    <span>{{ data.streak }} {{ _('Day Streak!') }}</span>
+                </div>
+                {% endif %}
+            </div>
+            <p style="margin: 8px 0 0 0; opacity: 0.8; font-size: 0.95rem;">{{ _('Keep pushing towards your goals!') }}</p>
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); padding: 24px; border-radius: var(--radius); border: 1px solid rgba(255, 255, 255, 0.2); min-width: 240px;">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <span style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.8;">{{ _('Wellness Score') }}</span>
+                <div style="display: flex; align-items: baseline; gap: 4px; margin: 8px 0;">
+                    <span style="font-size: 3.5rem; font-weight: 800;">{{ data.wellness.total_score }}</span>
+                    <span style="font-size: 1.25rem; opacity: 0.7;">/100</span>
+                </div>
+                <p style="margin: 0; font-size: 0.85rem; text-align: center; line-height: 1.4; opacity: 0.9;">
+                    {{ data.wellness.explanation }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not data.daily_log or not data.daily_log.sleep_hours or (data.daily_log.water_liters or 0.0) < 1.0 %}
+<div class="dashboard-reminder" style="margin-top: 24px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="toast-icon" style="background-color: var(--teal-light-alpha); color: var(--teal); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <i data-lucide="bell" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div>
+            <h4 style="margin: 0; font-weight: 700; color: var(--text-main); font-size: 0.95rem;">{{ _('Smart Reminders') }}</h4>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+                {% if not data.daily_log or not data.daily_log.sleep_hours %}
+                    {{ _('🛌 Did you sleep well last night? Remember to log your sleep duration!') }}
+                {% else %}
+                    {{ _('💧 Stay hydrated! Remember to drink water and log your progress.') }}
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    <a href="{{ url_for('logs.create') }}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+        <i data-lucide="plus"></i>
+        <span>{{ _('Log Now') }}</span>
+    </a>
+</div>
+{% endif %}
+
+<div class="card" style="margin-top: 20px; z-index: 10; padding: 20px; border: none; box-shadow: var(--shadow); background-color: var(--white);">
+    <div style="display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <div class="icon-circle icon-teal" style="margin-bottom: 0; width: 40px; height: 40px;">
+                <i data-lucide="zap" style="width: 20px; height: 20px;"></i>
+            </div>
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700;">{{ _('Quick Actions') }}</h3>
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <a href="{{ url_for('meals.create') }}" class="btn" style="background-color: var(--teal); color: white; padding: 10px 20px; display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i> {{ _('Log a Meal') }}
+            </a>
+            <a href="{{ url_for('logs.create') }}" class="btn" style="background-color: var(--blue); color: white; padding: 10px 20px; display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="clipboard-edit" style="width: 18px; height: 18px;"></i> {{ _('Daily Health Log') }}
+            </a>
+            <a href="{{ url_for('advisor.index') }}" class="btn btn-secondary" style="padding: 10px 20px; display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> {{ _('Get AI Advice') }}
+            </a>
+            <a href="{{ url_for('history.view_report') }}" class="btn btn-secondary" style="padding: 10px 20px; display: flex; align-items: center; gap: 8px; border-color: var(--teal-light); color: var(--teal);">
+                <i data-lucide="file-text" style="width: 18px; height: 18px;"></i> {{ _('Download PDF Report') }}
+            </a>
+        </div>
+    </div>
+    
+    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="icon-circle icon-blue" style="margin-bottom: 0; width: 36px; height: 36px;">
+                <i data-lucide="droplet" style="width: 18px; height: 18px;"></i>
+            </div>
+            <div>
+                <h4 style="margin: 0; font-size: 0.9rem; font-weight: 600;">{{ _('Quick Hydration') }}</h4>
+                <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">{{ _('Current:') }} <strong id="quick-water-total">{{ data.daily_log.water_liters if data.daily_log else '0' }}</strong>L</p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button onclick="incrementWater(0.25)" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;">{{ _('+250ml') }}</button>
+            <button onclick="incrementWater(0.5)" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;">{{ _('+500ml') }}</button>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Calories -->
+    <div class="stat-card-premium">
+        <div class="progress-ring-container">
+            <svg class="progress-ring" width="120" height="120">
+                <circle class="progress-ring-bg" stroke="var(--border)" stroke-width="7" fill="transparent" r="48" cx="60" cy="60"/>
+                <circle class="progress-ring-circle" id="ring-calories" stroke="var(--teal)" stroke-width="7" stroke-linecap="round" fill="transparent" r="48" cx="60" cy="60"
+                        stroke-dasharray="301.6" stroke-dashoffset="301.6"/>
+            </svg>
+            <div class="progress-ring-icon" style="color: var(--teal); background-color: rgba(13, 148, 136, 0.1);">
+                <i data-lucide="flame"></i>
+            </div>
+        </div>
+        <span class="label">{{ _('Calories') }}</span>
+        <span class="value-container">
+            <span class="value-main" id="calories-value-text">{{ data.total_calories|round }}</span>
+            <span class="value-unit">kcal</span>
+        </span>
+        {% if data.goal and data.goal.daily_calorie_goal %}
+            <span class="target-label">{{ _('Goal:') }} <strong>{{ data.goal.daily_calorie_goal }}</strong></span>
+        {% endif %}
+    </div>
+
+    <!-- Water -->
+    <div class="stat-card-premium">
+        <div class="progress-ring-container">
+            <svg class="progress-ring" width="120" height="120">
+                <circle class="progress-ring-bg" stroke="var(--border)" stroke-width="7" fill="transparent" r="48" cx="60" cy="60"/>
+                <circle class="progress-ring-circle" id="ring-water" stroke="var(--blue)" stroke-width="7" stroke-linecap="round" fill="transparent" r="48" cx="60" cy="60"
+                        stroke-dasharray="301.6" stroke-dashoffset="301.6"/>
+            </svg>
+            <div class="progress-ring-icon" style="color: var(--blue); background-color: rgba(59, 130, 246, 0.1);">
+                <i data-lucide="droplets"></i>
+            </div>
+        </div>
+        <span class="label">{{ _('Water Intake') }}</span>
+        <span class="value-container">
+            <span class="value-main" id="water-value-text">{{ data.daily_log.water_liters if data.daily_log else '0' }}</span>
+            <span class="value-unit">L</span>
+        </span>
+        {% if data.goal and data.goal.daily_water_goal %}
+            <span class="target-label">{{ _('Goal:') }} <strong>{{ data.goal.daily_water_goal }}</strong></span>
+        {% endif %}
+    </div>
+
+    <!-- Sleep -->
+    <div class="stat-card-premium">
+        <div class="progress-ring-container">
+            <svg class="progress-ring" width="120" height="120">
+                <circle class="progress-ring-bg" stroke="var(--border)" stroke-width="7" fill="transparent" r="48" cx="60" cy="60"/>
+                <circle class="progress-ring-circle" id="ring-sleep" stroke="#8b5cf6" stroke-width="7" stroke-linecap="round" fill="transparent" r="48" cx="60" cy="60"
+                        stroke-dasharray="301.6" stroke-dashoffset="301.6"/>
+            </svg>
+            <div class="progress-ring-icon" style="color: #8b5cf6; background-color: rgba(139, 92, 246, 0.1);">
+                <i data-lucide="moon"></i>
+            </div>
+        </div>
+        <span class="label">{{ _('Sleep') }}</span>
+        <span class="value-container">
+            <span class="value-main" id="sleep-value-text">{{ data.daily_log.sleep_hours if data.daily_log else '0' }}</span>
+            <span class="value-unit">h</span>
+        </span>
+        {% if data.goal and data.goal.daily_sleep_goal %}
+            <span class="target-label">{{ _('Goal:') }} <strong>{{ data.goal.daily_sleep_goal }}</strong></span>
+        {% endif %}
+    </div>
+
+    <!-- Exercise -->
+    <div class="stat-card-premium">
+        <div class="progress-ring-container">
+            <svg class="progress-ring" width="120" height="120">
+                <circle class="progress-ring-bg" stroke="var(--border)" stroke-width="7" fill="transparent" r="48" cx="60" cy="60"/>
+                <circle class="progress-ring-circle" id="ring-exercise" stroke="#10b981" stroke-width="7" stroke-linecap="round" fill="transparent" r="48" cx="60" cy="60"
+                        stroke-dasharray="301.6" stroke-dashoffset="301.6"/>
+            </svg>
+            <div class="progress-ring-icon" style="color: #10b981; background-color: rgba(16, 185, 129, 0.1);">
+                <i data-lucide="timer"></i>
+            </div>
+        </div>
+        <span class="label">{{ _('Exercise') }}</span>
+        <span class="value-container">
+            <span class="value-main" id="exercise-value-text">{{ data.daily_log.exercise_minutes if data.daily_log else '0' }}</span>
+            <span class="value-unit">min</span>
+        </span>
+        {% if data.goal and data.goal.weekly_exercise_goal %}
+            <span class="target-label">{{ _('Daily Target:') }} <strong>{{ (data.goal.weekly_exercise_goal / 7)|round }}</strong></span>
+        {% endif %}
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px; margin-bottom: 32px;">
+    <div class="card">
+        <h2 style="margin-bottom: 20px;"><i data-lucide="pie-chart"></i> {{ _('Macros Distribution') }}</h2>
+        <div style="position: relative; height: 300px; display: flex; align-items: center; justify-content: center;">
+            {% if data.total_calories > 0 %}
+                <canvas id="macrosChart"></canvas>
+            {% else %}
+                <div style="text-align: center; color: var(--text-muted);">
+                    <i data-lucide="info" style="width: 48px; height: 48px; opacity: 0.2; margin-bottom: 12px;"></i>
+                    <p>{{ _('No meals logged today') }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card">
+        <h2 style="margin-bottom: 20px;"><i data-lucide="trending-up"></i> {{ _('Calories History') }}</h2>
+        <div style="position: relative; height: 300px;">
+            <canvas id="caloriesChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <h2 style="margin-bottom: 20px;"><i data-lucide="bar-chart-3"></i> {{ _('Water Intake') }}</h2>
+        <div style="position: relative; height: 300px;">
+            <canvas id="waterChart"></canvas>
+        </div>
+    </div>
+</div>
+
+
+<div class="card" style="margin-bottom: 32px;">
+    <h2 style="margin-bottom: 20px;"><i data-lucide="scale"></i> {{ _('Weight Trend (kg)') }}</h2>
+    <div style="position: relative; height: 300px;">
+        <canvas id="weightChart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const currentLang = document.documentElement.lang || 'el';
+
+    const fetchChartData = async (metric) => {
+        const response = await fetch(`/api/charts/${metric}?range=7days`);
+        return await response.json();
+    };
+
+    const initCharts = async () => {
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    displayColors: false
+                }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    border: { display: false }, 
+                    grid: { color: '#f1f5f9' },
+                    ticks: { color: '#64748b', font: { size: 11 } }
+                },
+                x: { 
+                    border: { display: false }, 
+                    grid: { display: false },
+                    ticks: { color: '#64748b', font: { size: 11 } }
+                }
+            }
+        };
+
+        const calData = await fetchChartData('calories');
+        new Chart(document.getElementById('caloriesChart'), {
+            type: 'line',
+            data: {
+                labels: calData.labels,
+                datasets: [{
+                    data: calData.values,
+                    borderColor: '#0d9488',
+                    backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#0d9488'
+                }]
+            },
+            options: commonOptions
+        });
+
+        const waterData = await fetchChartData('water');
+        new Chart(document.getElementById('waterChart'), {
+            type: 'bar',
+            data: {
+                labels: waterData.labels,
+                datasets: [{
+                    data: waterData.values,
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 6
+                }]
+            },
+            options: commonOptions
+        });
+
+        // Macros Pie Chart
+        const macrosCtx = document.getElementById('macrosChart');
+        if (macrosCtx) {
+            const macroLabels = currentLang === 'el' 
+                ? ['Πρωτεΐνη (g)', 'Υδατάνθρακες (g)', 'Λίπος (g)'] 
+                : ['Protein (g)', 'Carbs (g)', 'Fat (g)'];
+
+            new Chart(macrosCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: macroLabels,
+                    datasets: [{
+                        data: [
+                            {{ data.total_protein|round(1) }},
+                            {{ data.total_carbs|round(1) }},
+                            {{ data.total_fat|round(1) }}
+                        ],
+                        backgroundColor: ['#0d9488', '#3b82f6', '#fb923c'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-main').trim() || '#0f172a',
+                                font: { family: 'Outfit', size: 12, weight: '500' },
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: { family: 'Outfit', size: 13 },
+                            bodyFont: { family: 'Outfit', size: 12 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: true
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        const weightData = await fetchChartData('weight');
+        new Chart(document.getElementById('weightChart'), {
+            type: 'line',
+            data: {
+                labels: weightData.labels,
+                datasets: [{
+                    label: currentLang === 'el' ? 'Βάρος (kg)' : 'Weight (kg)',
+                    data: weightData.values,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#3b82f6',
+                    spanGaps: true
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: { ...commonOptions.plugins, legend: { display: false } },
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        beginAtZero: false,
+                        ticks: {
+                            ...commonOptions.scales.y.ticks,
+                            callback: function(value) { return value + ' kg'; }
+                        }
+                    }
+                }
+            }
+        });
+    };
+    initCharts();
+    window.refreshCharts = initCharts;
+});
+
+function animateRing(ringId, current, target) {
+    const ring = document.getElementById(ringId);
+    if (!ring) return;
+    const r = ring.r.baseVal.value;
+    const circumference = 2 * Math.PI * r;
+    ring.style.strokeDasharray = `${circumference} ${circumference}`;
+    
+    const percentage = target > 0 ? (current / target) * 100 : 0;
+    const cappedPercentage = Math.min(100, Math.max(0, percentage));
+    const offset = circumference - (cappedPercentage / 100) * circumference;
+    
+    setTimeout(() => {
+        ring.style.strokeDashoffset = offset;
+    }, 100);
+}
+
+function initRings() {
+    animateRing('ring-calories', {{ data.total_calories|round }}, {{ (data.goal.daily_calorie_goal or 2000) if data.goal else 2000 }});
+    animateRing('ring-water', {{ (data.daily_log.water_liters or 0.0) if data.daily_log else 0.0 }}, {{ (data.goal.daily_water_goal or 2.0) if data.goal else 2.0 }});
+    animateRing('ring-sleep', {{ (data.daily_log.sleep_hours or 0.0) if data.daily_log else 0.0 }}, {{ (data.goal.daily_sleep_goal or 8.0) if data.goal else 8.0 }});
+    animateRing('ring-exercise', {{ (data.daily_log.exercise_minutes or 0) if data.daily_log else 0 }}, {{ ((data.goal.weekly_exercise_goal or 210) / 7)|round if data.goal else 30 }});
+}
+
+document.addEventListener('DOMContentLoaded', initRings);
+
+const incrementWater = async (amount) => {
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const response = await fetch('/api/logs/water/increment', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ amount: amount })
+        });
+        const result = await response.json();
+        if (result.success) {
+            // Update both the quick widget and the main stat card
+            document.getElementById('quick-water-total').innerText = result.new_total;
+            const waterValueText = document.getElementById('water-value-text');
+            if (waterValueText) {
+                waterValueText.innerText = result.new_total;
+            }
+            animateRing('ring-water', result.new_total, {{ (data.goal.daily_water_goal or 2.0) if data.goal else 2.0 }});
+            
+            // Trigger chart refresh if possible
+            if (window.refreshCharts) window.refreshCharts();
+        }
+    } catch (error) {
+        console.error('Error updating water:', error);
+    }
+};
+</script>
+{% endblock %}

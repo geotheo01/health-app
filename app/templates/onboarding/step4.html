@@ -1,0 +1,57 @@
+{% extends 'onboarding/base_onboarding.html' %}
+
+{% block onboarding_step %}
+<div style="text-align: center; margin-bottom: 40px;">
+    <div class="icon-circle icon-teal" style="margin: 0 auto 20px; width: 64px; height: 64px;">
+        <i data-lucide="clipboard-check" style="width: 32px; height: 32px;"></i>
+    </div>
+    <h2 style="margin: 0; font-size: 2rem; font-weight: 800; color: var(--navy);">{{ _('Habits & Preferences') }}</h2>
+    <p style="color: var(--slate); margin-top: 12px; font-size: 1.1rem;">{{ _('Select all that apply to you') }}</p>
+</div>
+
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    
+    <div style="display: grid; gap: 12px; margin-bottom: 32px;">
+        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; border: 2px solid var(--border); border-radius: 12px; transition: all 0.2s;">
+            <input type="checkbox" name="habits" value="skips_meals" style="width: 20px; height: 20px; accent-color: var(--teal);">
+            <span style="font-weight: 500; color: var(--navy);">{{ _('I often skip meals') }}</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; border: 2px solid var(--border); border-radius: 12px; transition: all 0.2s;">
+            <input type="checkbox" name="habits" value="late_night_eating" style="width: 20px; height: 20px; accent-color: var(--teal);">
+            <span style="font-weight: 500; color: var(--navy);">{{ _('I eat late at night') }}</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; border: 2px solid var(--border); border-radius: 12px; transition: all 0.2s;">
+            <input type="checkbox" name="habits" value="frequent_snacking" style="width: 20px; height: 20px; accent-color: var(--teal);">
+            <span style="font-weight: 500; color: var(--navy);">{{ _('I snack frequently') }}</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; border: 2px solid var(--border); border-radius: 12px; transition: all 0.2s;">
+            <input type="checkbox" name="habits" value="sugary_drinks" style="width: 20px; height: 20px; accent-color: var(--teal);">
+            <span style="font-weight: 500; color: var(--navy);">{{ _('I consume sugary drinks') }}</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; border: 2px solid var(--border); border-radius: 12px; transition: all 0.2s;">
+            <input type="checkbox" name="habits" value="emotional_eating" style="width: 20px; height: 20px; accent-color: var(--teal);">
+            <span style="font-weight: 500; color: var(--navy);">{{ _('I eat when stressed/emotional') }}</span>
+        </label>
+    </div>
+
+    <div class="form-group">
+        <label style="font-weight: 600; color: var(--navy);">{{ _('Dietary Preference') }}</label>
+        <select name="diet_preference" style="height: 48px; border-radius: 12px; border: 2px solid var(--border); background-color: white;">
+            <option value="none">{{ _('None / Balanced') }}</option>
+            <option value="mediterranean">{{ _('Mediterranean') }}</option>
+            <option value="vegetarian">{{ _('Vegetarian') }}</option>
+            <option value="vegan">{{ _('Vegan') }}</option>
+            <option value="low_carb">{{ _('Low Carb / Keto') }}</option>
+            <option value="other">{{ _('Other') }}</option>
+        </select>
+    </div>
+
+    <div style="display: flex; gap: 16px; margin-top: 40px;">
+        <a href="{{ url_for('onboarding.step', step_num=3) }}" class="btn btn-secondary" style="flex: 1; height: 56px; border-radius: 12px; font-weight: 600;">{{ _('Back') }}</a>
+        <button type="submit" class="btn" style="flex: 2; height: 56px; border-radius: 12px; font-weight: 700; box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.3);">
+            {{ _('Next') }} <i data-lucide="arrow-right" style="margin-left: 8px;"></i>
+        </button>
+    </div>
+</form>
+{% endblock %}

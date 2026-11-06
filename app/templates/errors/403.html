@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>403 {{ _('Access Denied') }}</h3>{% endblock %}
+{% block content %}
+<div class="card" style="text-align: center; padding: 40px;">
+    <h1 style="color: #e74c3c; font-size: 4em; margin-bottom: 10px;">403</h1>
+    <h2>{{ _('Access Denied') }}</h2>
+    <p style="color: #666; margin-bottom: 30px;">{{ _('You do not have permission to access this page.') }}</p>
+    <a href="{{ url_for('main.index') }}" class="btn">{{ _('Return Home') }}</a>
+</div>
+{% endblock %}

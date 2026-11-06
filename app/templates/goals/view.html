@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>{{ _('My Health Goals') }}</h3>{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+        <h2><i data-lucide="target"></i> {{ _('My Wellness Targets') }}</h2>
+        <a href="{{ url_for('goals.edit') }}" class="btn btn-secondary">
+            <i data-lucide="edit-2"></i> {{ _('Edit Goals') }}
+        </a>
+    </div>
+
+    {% if goal %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 32px;">
+        <div style="background: #fdfcf7; border-radius: var(--radius); padding: 24px; border: 1px solid #fef3c7;">
+            <div style="display: flex; align-items: center; gap: 12px; color: #d97706; margin-bottom: 12px;">
+                <i data-lucide="flame"></i>
+                <span style="font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em;">{{ _('Calories') }}</span>
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 700;">{{ goal.daily_calorie_goal or '--' }} <small style="font-size: 0.9rem; font-weight: 400; color: var(--slate);">{{ _('kcal / day') }}</small></div>
+        </div>
+
+        <div style="background: #eff6ff; border-radius: var(--radius); padding: 24px; border: 1px solid #dbeafe;">
+            <div style="display: flex; align-items: center; gap: 12px; color: #2563eb; margin-bottom: 12px;">
+                <i data-lucide="droplets"></i>
+                <span style="font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em;">{{ _('Hydration') }}</span>
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 700;">{{ goal.daily_water_goal or '--' }} <small style="font-size: 0.9rem; font-weight: 400; color: var(--slate);">{{ _('L / day') }}</small></div>
+        </div>
+
+        <div style="background: #f5f3ff; border-radius: var(--radius); padding: 24px; border: 1px solid #ede9fe;">
+            <div style="display: flex; align-items: center; gap: 12px; color: #7c3aed; margin-bottom: 12px;">
+                <i data-lucide="moon"></i>
+                <span style="font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em;">{{ _('Rest') }}</span>
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 700;">{{ goal.daily_sleep_goal or '--' }} <small style="font-size: 0.9rem; font-weight: 400; color: var(--slate);">{{ _('hours / day') }}</small></div>
+        </div>
+
+        <div style="background: #ecfdf5; border-radius: var(--radius); padding: 24px; border: 1px solid #d1fae5;">
+            <div style="display: flex; align-items: center; gap: 12px; color: #059669; margin-bottom: 12px;">
+                <i data-lucide="timer"></i>
+                <span style="font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em;">{{ _('Activity') }}</span>
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 700;">{{ goal.weekly_exercise_goal or '--' }} <small style="font-size: 0.9rem; font-weight: 400; color: var(--slate);">{{ _('min / week') }}</small></div>
+        </div>
+    </div>
+    <div style="border-top: 1px solid var(--border); padding-top: 20px; color: var(--slate); font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
+        {{ _('Last updated:') }} {{ goal.updated_at.strftime('%d/%m/%Y %H:%M') if current_lang == 'el' else goal.updated_at.strftime('%b %d, %Y %H:%M') }}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 48px; color: var(--slate);">
+        <i data-lucide="target" style="width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.2;"></i>
+        <p>{{ _("You haven't set any health goals yet.") }}</p>
+        <a href="{{ url_for('goals.edit') }}" class="btn">{{ _('Set My Goals') }}</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'onboarding/base_onboarding.html' %}
+
+{% block onboarding_step %}
+<div style="text-align: center; margin-bottom: 40px;">
+    <div class="icon-circle icon-mint" style="margin: 0 auto 20px; width: 64px; height: 64px;">
+        <i data-lucide="zap" style="width: 32px; height: 32px;"></i>
+    </div>
+    <h2 style="margin: 0; font-size: 2rem; font-weight: 800; color: var(--navy);">{{ _('Lifestyle & Activity') }}</h2>
+    <p style="color: var(--slate); margin-top: 12px; font-size: 1.1rem;">{{ _('How active is your daily routine?') }}</p>
+</div>
+
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    
+    <div class="form-group">
+        <label style="font-weight: 600; color: var(--navy);">{{ _('Activity Level') }}</label>
+        <select name="activity_level" required style="height: 48px; border-radius: 12px; border: 2px solid var(--border); background-color: white;">
+            <option value="sedentary">{{ _('Sedentary (Little or no exercise)') }}</option>
+            <option value="lightly_active">{{ _('Lightly Active (Light exercise 1-3 days/week)') }}</option>
+            <option value="moderately_active">{{ _('Moderately Active (Moderate exercise 3-5 days/week)') }}</option>
+            <option value="very_active">{{ _('Very Active (Hard exercise 6-7 days/week)') }}</option>
+            <option value="extremely_active">{{ _('Extremely Active (Very hard exercise & physical job)') }}</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label style="font-weight: 600; color: var(--navy);">{{ _('Average Sleep (Hours per night)') }}</label>
+        <input type="number" name="average_sleep_hours" required step="0.5" min="0" max="24" placeholder="e.g. 7.5" style="height: 48px; border-radius: 12px; border: 2px solid var(--border);">
+    </div>
+
+    <div class="form-group">
+        <label style="font-weight: 600; color: var(--navy);">{{ _('Average Water (Liters per day)') }}</label>
+        <input type="number" name="average_water_liters" required step="0.1" min="0" placeholder="e.g. 2.5" style="height: 48px; border-radius: 12px; border: 2px solid var(--border);">
+    </div>
+
+    <div style="display: flex; gap: 16px; margin-top: 40px;">
+        <a href="{{ url_for('onboarding.step', step_num=2) }}" class="btn btn-secondary" style="flex: 1; height: 56px; border-radius: 12px; font-weight: 600;">{{ _('Back') }}</a>
+        <button type="submit" class="btn" style="flex: 2; height: 56px; border-radius: 12px; font-weight: 700; box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.3);">
+            {{ _('Next') }} <i data-lucide="arrow-right" style="margin-left: 8px;"></i>
+        </button>
+    </div>
+</form>
+{% endblock %}

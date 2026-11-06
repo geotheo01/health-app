@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>{{ _('AI Advisor') }}</h3>{% endblock %}
+
+{% block content %}
+<div class="card" style="background: linear-gradient(135deg, #134e4a, #0d9488); color: white; border: none; margin-bottom: 32px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; flex-wrap: wrap; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 24px;">
+            <div class="icon-circle" style="background: rgba(255,255,255,0.2); color: white; width: 64px; height: 64px;">
+                <i data-lucide="bot" style="width: 32px; height: 32px;"></i>
+            </div>
+            <div>
+                <h2 style="margin: 0; color: white; font-size: 1.75rem;">{{ _('Your Smart Health Partner') }}</h2>
+                <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 1.05rem;">
+                    {{ _("I've analyzed your recent logs and goals to provide personalized wellness insights.") }}
+                </p>
+            </div>
+        </div>
+        <!-- Refresh button -->
+        <button id="refreshBtn" onclick="refreshRecommendations()"
+            style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white;
+                   padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem;
+                   display: flex; align-items: center; gap: 8px; transition: background 0.2s;"
+            onmouseover="this.style.background='rgba(255,255,255,0.25)'"
+            onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+            <i data-lucide="refresh-cw" id="refreshIcon" style="width: 16px; height: 16px;"></i>
+            {{ _('Refresh Analysis') }}
+        </button>
+    </div>
+</div>
+
+<div class="card" id="advisorCard">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+        <h2 style="display: flex; align-items: center; gap: 12px; margin: 0;">
+            <i data-lucide="sparkles" style="color: var(--teal);"></i> {{ _('Daily Recommendations') }}
+        </h2>
+        <span id="genTimestamp" style="font-size: 0.8rem; color: var(--slate);">
+            {% if has_today %}{{ _('Generated today') }}{% endif %}
+        </span>
+    </div>
+
+    <!-- ── Skeleton loader (shown while generating) ── -->
+    <div id="skeletonLoader" style="display: none; flex-direction: column; gap: 20px;">
+        <div style="display: flex; align-items: center; gap: 12px; color: var(--teal); margin-bottom: 8px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+            <span style="font-size: 0.95rem; font-weight: 600;">{{ _('AI is analyzing your data...') }}</span>
+        </div>
+        {% for _ in range(4) %}
+        <div style="padding: 20px; border: 1px solid var(--border); border-radius: var(--radius); animation: pulse 1.5s infinite;">
+            <div style="height: 14px; background: #e2e8f0; border-radius: 4px; width: 60%; margin-bottom: 10px;"></div>
+            <div style="height: 10px; background: #f1f5f9; border-radius: 4px; width: 90%; margin-bottom: 6px;"></div>
+            <div style="height: 10px; background: #f1f5f9; border-radius: 4px; width: 75%;"></div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- ── Recommendations container ── -->
+    <div id="recommendationsContainer">
+        {% if recommendations %}
+            <div style="display: flex; flex-direction: column; gap: 32px;">
+                {% set weekly = recommendations | selectattr('category', 'equalto', 'weekly_insight') | list %}
+                {% if weekly %}
+                <div>
+                    <h3 style="display: flex; align-items: center; gap: 10px; color: var(--navy); margin-bottom: 16px;">
+                        <div class="icon-circle icon-teal" style="width: 32px; height: 32px;"><i data-lucide="line-chart" style="width: 16px;"></i></div>
+                        {{ _('Weekly Trend Insight') }}
+                    </h3>
+                    <div style="padding: 24px; border-left: 4px solid var(--teal); background: var(--off-white); border-radius: 0 var(--radius) var(--radius) 0; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                        <strong style="display: block; font-size: 1.15rem; color: var(--navy); margin-bottom: 8px;">{{ weekly[0].message }}</strong>
+                        <p style="margin: 0; color: var(--slate); line-height: 1.6;">{{ weekly[0].explanation }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% set actions = recommendations | selectattr('category', 'equalto', 'daily_action') | list %}
+                {% if actions %}
+                <div>
+                    <h3 style="display: flex; align-items: center; gap: 10px; color: var(--navy); margin-bottom: 16px;">
+                        <div class="icon-circle icon-teal" style="width: 32px; height: 32px;"><i data-lucide="check-square" style="width: 16px;"></i></div>
+                        {{ _('Your Daily Action Plan') }}
+                    </h3>
+                    <div style="display: grid; gap: 16px;">
+                    {% for action in actions %}
+                        <div style="padding: 20px; border: 1px solid var(--border); background: var(--card-bg); border-radius: var(--radius); display: flex; gap: 16px; align-items: flex-start; transition: all 0.2s; cursor: pointer;"
+                             onmouseover="this.style.borderColor='var(--teal)'; this.style.transform='translateY(-2px)'"
+                             onmouseout="this.style.borderColor='var(--border)'; this.style.transform='translateY(0)'">
+                            <div style="width: 24px; height: 24px; border: 2px solid var(--teal); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                <i data-lucide="check" style="width: 14px; color: transparent; transition: color 0.2s;"
+                                   onmouseover="this.style.color='var(--teal)'" onmouseout="this.style.color='transparent'"></i>
+                            </div>
+                            <div>
+                                <strong style="display: block; font-size: 1.05rem; color: var(--navy); margin-bottom: 4px;">{{ action.message }}</strong>
+                                <p style="margin: 0; color: var(--slate); font-size: 0.95rem; line-height: 1.5;">{{ action.explanation }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% set food = recommendations | selectattr('category', 'equalto', 'food_quality') | list %}
+                {% if food %}
+                <div>
+                    <h3 style="display: flex; align-items: center; gap: 10px; color: var(--navy); margin-bottom: 16px;">
+                        <div class="icon-circle icon-teal" style="width: 32px; height: 32px;"><i data-lucide="apple" style="width: 16px;"></i></div>
+                        {{ _('Food Quality Assessment') }}
+                    </h3>
+                    <div style="padding: 24px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius);">
+                        <strong style="display: block; font-size: 1.1rem; color: var(--text-main); margin-bottom: 8px;">{{ food[0].message }}</strong>
+                        <p style="margin: 0; color: var(--text-muted); line-height: 1.6;">{{ food[0].explanation }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div id="emptyState" style="padding: 48px; background: var(--off-white); border-radius: var(--radius); text-align: center; border: 2px dashed var(--border);">
+                <div class="icon-circle icon-teal" style="margin: 0 auto 20px; width: 64px; height: 64px; opacity: 0.5;">
+                    <i data-lucide="bot" style="width: 32px; height: 32px;"></i>
+                </div>
+                <h3 style="margin-bottom: 12px;">{{ _('Generating your analysis...') }}</h3>
+                <p style="color: var(--slate);">{{ _('Please wait while the AI analyses your health data.') }}</p>
+            </div>
+        {% endif %}
+    </div>
+
+
+    <!-- Error state -->
+    <div id="errorState" style="display: none; padding: 24px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius); color: #ef4444; margin-top: 16px;">
+        <strong>{{ _('Could not connect to AI.') }}</strong>
+        <span style="color: var(--text-muted);">{{ _('Your previous recommendations are shown above. Try refreshing in a few minutes.') }}</span>
+    </div>
+
+    <div style="margin-top: 40px; background: rgba(217, 119, 6, 0.1); padding: 20px; border-radius: var(--radius); border: 1px solid rgba(217, 119, 6, 0.2); display: flex; gap: 16px; align-items: flex-start;">
+        <i data-lucide="alert-triangle" style="color: #d97706; flex-shrink: 0;"></i>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+            <strong style="color: var(--text-main);">{{ _('Disclaimer:') }}</strong> {{ _('The AI Wellness Advisor provides general wellness suggestions based on your input. It is a rule-based system and does not provide medical diagnosis, treatment, or advice. Always consult a healthcare professional for medical concerns.') }}
+        </p>
+    </div>
+</div>
+
+
+<style>
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.spinning { animation: spin 1s linear infinite; }
+</style>
+
+<script>
+const HAS_TODAY = {{ 'true' if has_today else 'false' }};
+
+// ── Renders recommendations from JSON (AJAX response) ───────────────────────
+function renderRecommendations(recs) {
+    const weekly  = recs.filter(r => r.category === 'weekly_insight');
+    const actions = recs.filter(r => r.category === 'daily_action');
+    const food    = recs.filter(r => r.category === 'food_quality');
+
+    let html = '<div style="display: flex; flex-direction: column; gap: 32px;">';
+
+    if (weekly.length) {
+        html += `
+        <div>
+            <h3 style="display:flex;align-items:center;gap:10px;color:var(--navy);margin-bottom:16px;">
+                <div class="icon-circle icon-teal" style="width:32px;height:32px;"><i data-lucide="line-chart" style="width:16px;"></i></div>
+                {{ _('Weekly Trend Insight') | e }}
+            </h3>
+            <div style="padding:24px;border-left:4px solid var(--teal);background:var(--off-white);border-radius:0 var(--radius) var(--radius) 0;">
+                <strong style="display:block;font-size:1.15rem;color:var(--navy);margin-bottom:8px;">${weekly[0].message}</strong>
+                <p style="margin:0;color:var(--slate);line-height:1.6;">${weekly[0].explanation}</p>
+            </div>
+        </div>`;
+    }
+
+    if (actions.length) {
+        html += `
+        <div>
+            <h3 style="display:flex;align-items:center;gap:10px;color:var(--navy);margin-bottom:16px;">
+                <div class="icon-circle icon-teal" style="width:32px;height:32px;"><i data-lucide="check-square" style="width:16px;"></i></div>
+                {{ _('Your Daily Action Plan') | e }}
+            </h3>
+            <div style="display:grid;gap:16px;">`;
+        actions.forEach(a => {
+            html += `
+            <div style="padding:20px;border:1px solid var(--border);background:var(--card-bg);border-radius:var(--radius);display:flex;gap:16px;align-items:flex-start;transition:all 0.2s;cursor:pointer;"
+                 onmouseover="this.style.borderColor='var(--teal)';this.style.transform='translateY(-2px)'"
+                 onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'">
+                <div style="width:24px;height:24px;border:2px solid var(--teal);border-radius:50%;flex-shrink:0;margin-top:2px;"></div>
+                <div>
+                    <strong style="display:block;font-size:1.05rem;color:var(--navy);margin-bottom:4px;">${a.message}</strong>
+                    <p style="margin:0;color:var(--slate);font-size:0.95rem;line-height:1.5;">${a.explanation}</p>
+                </div>
+            </div>`;
+        });
+        html += `</div></div>`;
+    }
+
+    if (food.length) {
+        html += `
+        <div>
+            <h3 style="display:flex;align-items:center;gap:10px;color:var(--navy);margin-bottom:16px;">
+                <div class="icon-circle icon-teal" style="width:32px;height:32px;"><i data-lucide="apple" style="width:16px;"></i></div>
+                {{ _('Food Quality Assessment') | e }}
+            </h3>
+            <div style="padding:24px;background:rgba(16, 185, 129, 0.1);border:1px solid rgba(16, 185, 129, 0.2);border-radius:var(--radius);">
+                <strong style="display:block;font-size:1.1rem;color:var(--text-main);margin-bottom:8px;">${food[0].message}</strong>
+                <p style="margin:0;color:var(--text-muted);line-height:1.6;">${food[0].explanation}</p>
+            </div>
+        </div>`;
+    }
+
+    html += '</div>';
+    return html;
+}
+
+// ── Call generate endpoint ──────────────────────────────────────────────────
+async function callGenerate(endpoint) {
+    const skeleton  = document.getElementById('skeletonLoader');
+    const container = document.getElementById('recommendationsContainer');
+    const errorDiv  = document.getElementById('errorState');
+    const icon      = document.getElementById('refreshIcon');
+    const stamp     = document.getElementById('genTimestamp');
+
+    skeleton.style.display  = 'flex';
+    container.style.opacity = '0.3';
+    errorDiv.style.display  = 'none';
+    icon.classList.add('spinning');
+
+    try {
+        const resp = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' }
+        });
+        const data = await resp.json();
+
+        if (data.success && data.recommendations.length > 0) {
+            container.innerHTML = renderRecommendations(data.recommendations);
+            container.style.opacity = '1';
+            stamp.textContent = '{{ _("Generated just now") | e }}';
+            // Re-init lucide icons for dynamically added elements
+            if (window.lucide) lucide.createIcons();
+        } else {
+            container.style.opacity = '1';
+            if (!HAS_TODAY) {
+                container.innerHTML = `
+                <div style="padding:48px;background:var(--off-white);border-radius:var(--radius);text-align:center;border:2px dashed var(--border);">
+                    <h3 style="margin-bottom:12px;">{{ _('No data yet') | e }}</h3>
+                    <p style="color:var(--slate);">{{ _('Add some health logs to get your first AI analysis.') | e }}</p>
+                    <a href="/logs/new" class="btn" style="margin-top:16px;">{{ _('Add Health Log') | e }}</a>
+                </div>`;
+            }
+            if (!data.success) errorDiv.style.display = 'flex';
+        }
+    } catch (e) {
+        container.style.opacity = '1';
+        errorDiv.style.display  = 'block';
+    } finally {
+        skeleton.style.display = 'none';
+        icon.classList.remove('spinning');
+    }
+}
+
+function refreshRecommendations() {
+    callGenerate('/advisor/refresh');
+}
+
+// ── Auto-generate on first visit of the day ─────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    if (!HAS_TODAY) {
+        callGenerate('/advisor/generate');
+    }
+});
+</script>
+{% endblock %}

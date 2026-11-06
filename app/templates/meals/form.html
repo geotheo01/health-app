@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>{{ _('Edit Meal') if meal else _('Log a Meal') }}</h3>{% endblock %}
+
+{% block content %}
+<div class="card">
+    <form method="POST" id="meal-form" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        {% if favorites %}
+        <div class="form-group" style="margin-bottom: 32px; background: #f0fdfa; padding: 20px; border-radius: var(--radius); border: 1px solid var(--teal-light);">
+            <label style="display: flex; align-items: center; gap: 8px; color: var(--teal-dark); font-weight: 600;">
+                <i data-lucide="star"></i> {{ _('Load from Favorites') }}
+            </label>
+            <select id="favorite-selector" style="margin-top: 8px; background: white;">
+                <option value="">{{ _('-- Select a template --') }}</option>
+                {% for fav in favorites %}
+                <option value="{{ fav.id }}" data-items='{{ fav.items_json|safe }}' data-title="{{ fav.title }}" data-type="{{ fav.meal_type }}">
+                    {{ fav.title }} ({{ fav.total_calories|round(0) }} kcal)
+                </option>
+                {% endfor %}
+            </select>
+            <p style="margin: 8px 0 0 0; font-size: 0.8rem; color: var(--teal-dark); opacity: 0.8;">{{ _('Selecting a favorite will pre-fill the form items.') }}</p>
+        </div>
+        {% endif %}
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 32px;">
+            <div class="form-group">
+                <label><i data-lucide="calendar"></i> {{ _('Date') }}</label>
+                <input type="date" name="meal_date" value="{{ meal.meal_date.strftime('%Y-%m-%d') if meal else today }}" required>
+            </div>
+            <div class="form-group">
+                <label><i data-lucide="clock"></i> {{ _('Meal Type') }}</label>
+                <select name="meal_type" required>
+                    <option value="breakfast" {{ 'selected' if meal and meal.meal_type == 'breakfast' else '' }}>{{ _('Breakfast') }}</option>
+                    <option value="lunch" {{ 'selected' if meal and meal.meal_type == 'lunch' else '' }}>{{ _('Lunch') }}</option>
+                    <option value="dinner" {{ 'selected' if meal and meal.meal_type == 'dinner' else '' }}>{{ _('Dinner') }}</option>
+                    <option value="snack" {{ 'selected' if meal and meal.meal_type == 'snack' else '' }}>{{ _('Snack') }}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label><i data-lucide="type"></i> {{ _('Meal Title') }}</label>
+                <input type="text" name="title" value="{{ meal.title if meal else '' }}" placeholder="e.g., Grilled Chicken Salad" required>
+            </div>
+        </div>
+
+        <div class="form-group" style="background: var(--off-white); padding: 24px; border-radius: var(--radius); border: 1px dashed var(--border); margin-bottom: 32px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--navy); margin-bottom: 12px;">
+                <i data-lucide="camera" style="color: var(--teal);"></i> {{ _('Meal Image (Optional)') }}
+            </label>
+            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                <input type="file" id="meal-image-input" name="meal_image" accept=".png, .jpg, .jpeg, .webp" style="padding: 8px; background: white; border: 1px solid var(--border);" onchange="toggleAutoFillBtn()">
+                <button type="button" class="btn" id="auto-fill-btn" style="display: none; background-color: var(--navy); color: white;" onclick="autoFillWithAI()">
+                    <i data-lucide="sparkles"></i> <span id="auto-fill-text">{{ _('Auto-fill with AI') }}</span>
+                </button>
+                {% if meal and meal.image_path %}
+                    <div style="display: flex; align-items: center; gap: 12px; background: white; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);">
+                        <img src="{{ url_for('static', filename=meal.image_path) }}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
+                        <span style="font-size: 0.85rem; color: var(--slate);">{{ _('Current image') }}</span>
+                    </div>
+                {% endif %}
+            </div>
+            <p style="margin: 12px 0 0 0; font-size: 0.8rem; color: var(--slate);">{{ _('Upload a photo to automatically estimate calories and macros.') }}</p>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; display: flex; align-items: center; gap: 12px;">
+                <i data-lucide="list-plus"></i> {{ _('Food Items') }}
+            </h2>
+            <button type="button" class="btn btn-secondary" onclick="addMealItemRow()">
+                <i data-lucide="plus-circle"></i> {{ _('Add Item') }}
+            </button>
+        </div>
+
+        <div class="table-container" style="margin-bottom: 32px;">
+            <table id="items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">{{ _('Food Name') }}</th>
+                        <th style="width: 15%;">{{ _('Qty') }}</th>
+                        <th style="width: 15%;">{{ _('Kcal') }}</th>
+                        <th style="width: 12%;">{{ _('Protein') }}</th>
+                        <th style="width: 12%;">{{ _('Carbs') }}</th>
+                        <th style="width: 12%;">{{ _('Fat') }}</th>
+                        <th style="width: 40px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="items-body">
+                    {% if meal and meal.items %}
+                        {% for item in meal.items %}
+                        <tr>
+                            <td><input type="text" name="food_name[]" value="{{ item.food_name }}" required placeholder="e.g. Rice"></td>
+                            <td><input type="text" name="quantity[]" value="{{ item.quantity }}" placeholder="e.g. 200g"></td>
+                            <td><input type="number" step="0.1" name="calories[]" value="{{ item.calories }}" min="0"></td>
+                            <td><input type="number" step="0.1" name="protein[]" value="{{ item.protein }}" min="0"></td>
+                            <td><input type="number" step="0.1" name="carbs[]" value="{{ item.carbs }}" min="0"></td>
+                            <td><input type="number" step="0.1" name="fat[]" value="{{ item.fat }}" min="0"></td>
+                            <td style="text-align: center;">
+                                <button type="button" class="btn btn-danger" style="padding: 6px; border-radius: 6px;" onclick="this.closest('tr').remove()">
+                                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td><input type="text" name="food_name[]" placeholder="e.g. Chicken Breast" required></td>
+                            <td><input type="text" name="quantity[]" placeholder="e.g. 150g"></td>
+                            <td><input type="number" step="0.1" name="calories[]" placeholder="0" min="0"></td>
+                            <td><input type="number" step="0.1" name="protein[]" placeholder="0" min="0"></td>
+                            <td><input type="number" step="0.1" name="carbs[]" placeholder="0" min="0"></td>
+                            <td><input type="number" step="0.1" name="fat[]" placeholder="0" min="0"></td>
+                            <td style="text-align: center;">
+                                <button type="button" class="btn btn-danger" style="padding: 6px; border-radius: 6px;" onclick="this.closest('tr').remove()">
+                                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+                <input type="checkbox" name="save_as_favorite" style="width: 20px; height: 20px;">
+                <span style="font-weight: 500;">{{ _('Save this meal as a favorite template') }}</span>
+            </label>
+        </div>
+
+        <div style="display: flex; gap: 16px; border-top: 1px solid var(--border); padding-top: 32px;">
+            <button type="submit" class="btn" style="padding: 12px 32px; font-size: 1rem;">
+                <i data-lucide="save"></i> {{ _('Save Meal') }}
+            </button>
+            <a href="{{ url_for('meals.list_meals') }}" class="btn btn-secondary" style="padding: 12px 32px; font-size: 1rem;">
+                {{ _('Cancel') }}
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+function addMealItemRow() {
+    const tbody = document.getElementById('items-body');
+    const tr = document.createElement('tr');
+    
+    const currentLang = document.documentElement.lang || 'el';
+    const newItemPlaceholder = currentLang === 'el' ? 'Νέο Είδος' : 'New Item';
+    const quantityPlaceholder = currentLang === 'el' ? 'Ποσότητα' : 'Quantity';
+
+    tr.innerHTML = `
+        <td><input type="text" name="food_name[]" placeholder="${newItemPlaceholder}" required></td>
+        <td><input type="text" name="quantity[]" placeholder="${quantityPlaceholder}"></td>
+        <td><input type="number" step="0.1" name="calories[]" placeholder="0" min="0"></td>
+        <td><input type="number" step="0.1" name="protein[]" placeholder="0" min="0"></td>
+        <td><input type="number" step="0.1" name="carbs[]" placeholder="0" min="0"></td>
+        <td><input type="number" step="0.1" name="fat[]" placeholder="0" min="0"></td>
+        <td style="text-align: center;">
+            <button type="button" class="btn btn-danger" style="padding: 6px; border-radius: 6px;" onclick="this.closest('tr').remove()">
+                <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+    lucide.createIcons();
+}
+
+document.getElementById('favorite-selector')?.addEventListener('change', function() {
+    const option = this.options[this.selectedIndex];
+    if (!option.value) return;
+    
+    const items = JSON.parse(option.getAttribute('data-items'));
+    const title = option.getAttribute('data-title');
+    const type = option.getAttribute('data-type');
+    
+    // Fill title and type
+    document.querySelector('input[name="title"]').value = title;
+    document.querySelector('select[name="meal_type"]').value = type;
+    
+    // Fill items
+    const tbody = document.getElementById('items-body');
+    tbody.innerHTML = '';
+    
+    items.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" name="food_name[]" value="${item.food_name}" required></td>
+            <td><input type="text" name="quantity[]" value="${item.quantity || ''}"></td>
+            <td><input type="number" step="0.1" name="calories[]" value="${item.calories || 0}" min="0"></td>
+            <td><input type="number" step="0.1" name="protein[]" value="${item.protein || 0}" min="0"></td>
+            <td><input type="number" step="0.1" name="carbs[]" value="${item.carbs || 0}" min="0"></td>
+            <td><input type="number" step="0.1" name="fat[]" value="${item.fat || 0}" min="0"></td>
+            <td style="text-align: center;">
+                <button type="button" class="btn btn-danger" style="padding: 6px; border-radius: 6px;" onclick="this.closest('tr').remove()">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    lucide.createIcons();
+});
+
+function toggleAutoFillBtn() {
+    const input = document.getElementById('meal-image-input');
+    const btn = document.getElementById('auto-fill-btn');
+    if (input.files && input.files[0]) {
+        btn.style.display = 'inline-flex';
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+async function autoFillWithAI() {
+    const input = document.getElementById('meal-image-input');
+    const btn = document.getElementById('auto-fill-btn');
+    const textSpan = document.getElementById('auto-fill-text');
+    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+    
+    if (!input.files || !input.files[0]) return;
+    
+    // UI Loading state
+    btn.disabled = true;
+    textSpan.innerText = 'Analyzing...';
+    btn.style.opacity = '0.7';
+    
+    const formData = new FormData();
+    formData.append('image', input.files[0]);
+    formData.append('csrf_token', csrfToken);
+    
+    try {
+        const response = await fetch('/api/meals/analyze_upload', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            // Update Title
+            document.querySelector('input[name="title"]').value = result.data.detected_food_name;
+            
+            // Clear and add item
+            const tbody = document.getElementById('items-body');
+            tbody.innerHTML = '';
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" name="food_name[]" value="${result.data.detected_food_name}" required></td>
+                <td><input type="text" name="quantity[]" value="1 serving"></td>
+                <td><input type="number" step="0.1" name="calories[]" value="${result.data.estimated_calories}" min="0"></td>
+                <td><input type="number" step="0.1" name="protein[]" value="${result.data.protein}" min="0"></td>
+                <td><input type="number" step="0.1" name="carbs[]" value="${result.data.carbs}" min="0"></td>
+                <td><input type="number" step="0.1" name="fat[]" value="${result.data.fat}" min="0"></td>
+                <td style="text-align: center;">
+                    <button type="button" class="btn btn-danger" style="padding: 6px; border-radius: 6px;" onclick="this.closest('tr').remove()">
+                        <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            lucide.createIcons();
+            
+            if (typeof showToast === 'function') {
+                showToast('Meal analyzed successfully!', 'check-circle');
+            } else {
+                alert('Meal analyzed successfully!');
+            }
+        } else {
+            alert('Analysis failed: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        alert('An error occurred during analysis.');
+        console.error(error);
+    } finally {
+        btn.disabled = false;
+        textSpan.innerText = "{{ _('Auto-fill with AI') }}";
+        btn.style.opacity = '1';
+    }
+}
+</script>
+{% endblock %}

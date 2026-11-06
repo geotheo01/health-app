@@ -1,0 +1,53 @@
+{% extends 'onboarding/base_onboarding.html' %}
+
+{% block onboarding_step %}
+<div style="text-align: center; margin-bottom: 40px;">
+    <div class="icon-circle icon-blue" style="margin: 0 auto 20px; width: 64px; height: 64px;">
+        <i data-lucide="user" style="width: 32px; height: 32px;"></i>
+    </div>
+    <h2 style="margin: 0; font-size: 2rem; font-weight: 800; color: var(--navy);">{{ _('Tell us about yourself') }}</h2>
+    <p style="color: var(--slate); margin-top: 12px; font-size: 1.1rem;">{{ _('Basic metrics for health calculations') }}</p>
+</div>
+
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    
+    <div class="form-group">
+        <label style="font-weight: 600; color: var(--navy);">{{ _('Age') }}</label>
+        <input type="number" name="age" required min="10" max="120" placeholder="e.g. 25" style="height: 48px; border-radius: 12px; border: 2px solid var(--border);">
+    </div>
+
+    <div class="form-group">
+        <label style="font-weight: 600; color: var(--navy);">{{ _('Gender (Optional)') }}</label>
+        <select name="gender" style="height: 48px; border-radius: 12px; border: 2px solid var(--border); background-color: white;">
+            <option value="">{{ _('Select gender') }}</option>
+            <option value="male">{{ _('Male') }}</option>
+            <option value="female">{{ _('Female') }}</option>
+            <option value="other">{{ _('Other') }}</option>
+        </select>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="form-group">
+            <label style="font-weight: 600; color: var(--navy);">{{ _('Height') }} (cm)</label>
+            <input type="number" name="height_cm" required step="0.1" min="120" max="230" placeholder="e.g. 175" style="height: 48px; border-radius: 12px; border: 2px solid var(--border);">
+        </div>
+        <div class="form-group">
+            <label style="font-weight: 600; color: var(--navy);">{{ _('Weight') }} (kg)</label>
+            <input type="number" name="weight_kg" required step="0.1" min="40" max="230" placeholder="e.g. 70" style="height: 48px; border-radius: 12px; border: 2px solid var(--border);">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label style="font-weight: 600; color: var(--navy);">{{ _('Target Weight (kg, optional)') }}</label>
+        <input type="number" name="target_weight_kg" step="0.1" min="40" max="230" placeholder="e.g. 65" style="height: 48px; border-radius: 12px; border: 2px solid var(--border);">
+    </div>
+
+    <div style="display: flex; gap: 16px; margin-top: 40px;">
+        <a href="{{ url_for('onboarding.step', step_num=1) }}" class="btn btn-secondary" style="flex: 1; height: 56px; border-radius: 12px; font-weight: 600;">{{ _('Back') }}</a>
+        <button type="submit" class="btn" style="flex: 2; height: 56px; border-radius: 12px; font-weight: 700; box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.3);">
+            {{ _('Next') }} <i data-lucide="arrow-right" style="margin-left: 8px;"></i>
+        </button>
+    </div>
+</form>
+{% endblock %}

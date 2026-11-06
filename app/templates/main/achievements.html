@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Achievements') }} - {{ _('Smart Health Tracker') }}{% endblock %}
+
+{% block page_title %}{{ _('My Achievements') }}{% endblock %}
+
+{% block content %}
+<div class="achievements-container" style="display: flex; flex-direction: column; gap: 32px; padding-bottom: 40px;">
+    <!-- Overview Stats -->
+    <div class="card" style="background: linear-gradient(135deg, var(--teal), var(--teal-light)); color: var(--white); border: none; padding: 32px; position: relative; overflow: hidden; border-radius: 20px; box-shadow: var(--shadow-md);">
+        <div style="position: absolute; right: -20px; bottom: -20px; font-size: 150px; opacity: 0.1; font-weight: 800; pointer-events: none;">
+            🏆
+        </div>
+        <div style="max-width: 600px; position: relative; z-index: 2;">
+            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">{{ _('Keep it up, {name}!').format(name=user.full_name) }}</h2>
+            <p style="font-size: 1.1rem; opacity: 0.9; margin-bottom: 24px;">
+                {{ _('You have unlocked {unlocked} out of {total} badges. Compete in challenges to establish healthy habits.').format(unlocked=unlocked_count, total=total_count) }}
+            </p>
+            <div style="display: flex; gap: 32px; align-items: center;">
+                <div>
+                    <span style="display: block; font-size: 2rem; font-weight: 800;">🔥 {{ max_streak }}</span>
+                    <span style="font-size: 0.85rem; opacity: 0.8; text-transform: uppercase; font-weight: 600;">{{ _('Current Streak') }}</span>
+                </div>
+                <div style="width: 1px; height: 40px; background-color: rgba(255,255,255,0.2);"></div>
+                <div style="flex-grow: 1;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">
+                        <span>{{ _('Progress') }}</span>
+                        <span>{{ unlocked_count }}/{{ total_count }} ({{ ((unlocked_count / total_count) * 100)|round|int }}%)</span>
+                    </div>
+                    <div class="progress-bar" style="height: 10px; background-color: rgba(255, 255, 255, 0.2); border-radius: 5px; overflow: hidden;">
+                        <div class="progress" style="width: {{ (unlocked_count / total_count) * 100 }}%; height: 100%; background-color: var(--white); border-radius: 5px; transition: width 0.6s ease;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Challenges & Streak Tracker -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+        {% for challenge in challenges %}
+        <div class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; gap: 16px; align-items: center;">
+                <div style="width: 48px; height: 48px; border-radius: 12px; background-color: var(--teal-light-alpha); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                    <i data-lucide="{{ challenge.icon }}"></i>
+                </div>
+                <div>
+                    <h4 style="font-weight: 700; color: var(--text-main);">{{ challenge.title }}</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">{{ challenge.description }}</p>
+                </div>
+            </div>
+            <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; color: var(--text-main);">
+                    <span>{{ _('Challenge Progress') }}</span>
+                    <span>{{ challenge.progress }}%</span>
+                </div>
+                <div class="progress-bar" style="height: 8px; background-color: var(--border); border-radius: 4px; overflow: hidden;">
+                    <div class="progress" style="width: {{ challenge.progress }}%; height: 100%; background-color: var(--teal); border-radius: 4px;"></div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Badges Grid -->
+    <div>
+        <h3 style="font-size: 1.3rem; font-weight: 700; color: var(--text-main); margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="award" style="color: var(--teal);"></i>
+            {{ _('Achievements & Badges') }}
+        </h3>
+        
+        <div class="badges-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px;">
+            {% for badge in badges %}
+            <div class="card badge-card {% if not badge.unlocked %}badge-locked{% endif %}" style="padding: 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;">
+                <!-- Glowing Unlocked Background or Elegant Grayscale -->
+                <div class="badge-icon-wrapper" style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: var(--white); box-shadow: var(--shadow-sm); transition: all 0.3s;
+                    {% if badge.unlocked %}
+                        background: {{ badge.color }};
+                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+                    {% else %}
+                        background: var(--border);
+                        color: var(--text-muted);
+                    {% endif %}">
+                    {% if not badge.unlocked %}
+                        <i data-lucide="lock" style="width: 24px; height: 24px;"></i>
+                    {% else %}
+                        <i data-lucide="{{ badge.icon }}" style="width: 36px; height: 36px;"></i>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <h4 style="font-weight: 700; font-size: 1.1rem; color: var(--text-main); margin-bottom: 4px;">{{ badge.title }}</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; min-height: 40px; display: flex; align-items: center; justify-content: center;">
+                        {{ badge.description }}
+                    </p>
+                </div>
+
+                <div style="width: 100%; border-top: 1px dashed var(--border); padding-top: 12px; margin-top: 4px;">
+                    <span style="font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px;
+                        {% if badge.unlocked %}
+                            background-color: var(--teal-light-alpha);
+                            color: var(--teal);
+                        {% else %}
+                            background-color: var(--border);
+                            color: var(--text-muted);
+                        {% endif %}">
+                        <i data-lucide="info" style="width: 12px; height: 12px;"></i>
+                        {{ badge.criteria }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+# ---- Secrets -------------------------------------------------
+.env
+
+# ---- Python ----------------------------------------------------
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# ---- Local data (created automatically on first run) -----------
+health.db
+health_backup_*.db
+instance/
+*.sqlite3
+
+# ---- User uploads (keep the folder, not the photos) ------------
+app/static/uploads/meals/*
+!app/static/uploads/meals/.gitkeep
+
+# ---- YOLO training output: keep ONLY the final weights ---------
+runs/**
+!runs/
+!runs/detect/
+!runs/detect/runs/
+!runs/detect/runs/detect/
+!runs/detect/runs/detect/food_model_merged/
+!runs/detect/runs/detect/food_model_merged/weights/
+!runs/detect/runs/detect/food_model_merged/weights/best.pt
+
+# ---- OS / editors ----------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

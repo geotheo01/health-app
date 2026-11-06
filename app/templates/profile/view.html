@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>{{ _('Profile') }}</h3>{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 24px;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div class="icon-circle icon-teal" style="width: 64px; height: 64px; margin: 0;">
+                <i data-lucide="user" style="width: 32px; height: 32px;"></i>
+            </div>
+            <div>
+                <h1 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--navy);">{{ current_user.full_name }}</h1>
+                <p style="margin: 4px 0 0 0; color: var(--slate);">{{ current_user.email }}</p>
+            </div>
+        </div>
+        <a href="{{ url_for('profile.edit') }}" class="btn btn-secondary">
+            <i data-lucide="edit-3"></i> {{ _('Edit Profile') }}
+        </a>
+    </div>
+
+    {% if profile %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+        <div class="stat-card">
+            <span class="label">{{ _('Age') }}</span>
+            <span class="value">{{ profile.age or '--' }} <small style="font-size: 0.9rem; font-weight: 400;">{{ _('years') }}</small></span>
+        </div>
+        <div class="stat-card">
+            <span class="label">{{ _('Gender') }}</span>
+            <span class="value" style="font-size: 1.25rem;">{{ _(profile.gender|capitalize) if profile.gender else '--' }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="label">{{ _('Height') }}</span>
+            <span class="value">{{ profile.height_cm or '--' }} <small style="font-size: 0.9rem; font-weight: 400;">cm</small></span>
+        </div>
+        <div class="stat-card">
+            <span class="label">{{ _('Weight') }}</span>
+            <span class="value">{{ "%.1f"|format(profile.weight_kg) if profile.weight_kg else '--' }} <small style="font-size: 0.9rem; font-weight: 400;">kg</small></span>
+        </div>
+    </div>
+
+    <div style="margin-top: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+        <div class="card" style="margin-bottom: 0; background: var(--off-white);">
+            <h4 style="margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="activity" style="color: var(--teal); width: 18px;"></i> {{ _('Activity Level') }}
+            </h4>
+            <p style="margin: 0; font-weight: 600; color: var(--navy-light);">
+                {{ _(profile.activity_level.replace('_', ' ').title()) if profile.activity_level else _('Not specified') }}
+            </p>
+        </div>
+        <div class="card" style="margin-bottom: 0; background: var(--off-white);">
+            <h4 style="margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="target" style="color: var(--teal); width: 18px;"></i> {{ _('Health Goal') }}
+            </h4>
+            <p style="margin: 0; font-weight: 600; color: var(--navy-light);">
+                {{ _(profile.health_goal.replace('_', ' ').title()) if profile.health_goal else _('Not specified') }}
+            </p>
+        </div>
+    </div>
+
+    <div style="margin-top: 32px; color: var(--slate); font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="clock" style="width: 14px;"></i>
+        {{ _('Last updated:') }} {{ profile.updated_at.strftime('%d/%m/%Y %H:%M') if current_lang == 'el' else profile.updated_at.strftime('%B %d, %Y %H:%M') }}
+    </div>
+    {% else %}
+        <div style="text-align: center; padding: 48px; background: var(--off-white); border-radius: var(--radius); border: 2px dashed var(--border);">
+            <p style="color: var(--slate); margin-bottom: 24px;">{{ _("You haven't completed your health profile yet.") }}</p>
+            <a href="{{ url_for('profile.edit') }}" class="btn">{{ _('Create Profile') }}</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

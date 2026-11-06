@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>{{ _('Health Logs') }}</h3>{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2><i data-lucide="book-open"></i> {{ _('Your Daily Activity') }}</h2>
+        <a href="{{ url_for('logs.create') }}" class="btn">
+            <i data-lucide="plus"></i> {{ _('Add New Log') }}
+        </a>
+    </div>
+    
+    {% if logs %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ _('Date') }}</th>
+                    <th><i data-lucide="moon" style="width:14px;"></i> {{ _('Sleep') }}</th>
+                    <th><i data-lucide="droplet" style="width:14px;"></i> {{ _('Water') }}</th>
+                    <th><i data-lucide="zap" style="width:14px;"></i> {{ _('Exercise') }}</th>
+                    <th>{{ _('Mood') }}</th>
+                    <th>{{ _('Weight') }}</th>
+                    <th>{{ _('Actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td><strong>{{ log.log_date.strftime('%d/%m/%Y') if current_lang == 'el' else log.log_date.strftime('%b %d, %Y') }}</strong></td>
+                    <td style="font-weight: 500;">{{ log.sleep_hours or '0' }} <small style="color: var(--slate);">h</small></td>
+                    <td style="font-weight: 500;">{{ log.water_liters or '0' }} <small style="color: var(--slate);">L</small></td>
+                    <td style="font-weight: 500;">{{ log.exercise_minutes or '0' }} <small style="color: var(--slate);">min</small></td>
+                    <td>
+                        {% if log.mood_score %}
+                            <span style="background: var(--light-blue); color: var(--blue); padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.85rem;">
+                                {{ log.mood_score }}/10
+                            </span>
+                        {% else %}
+                            <span style="color: var(--slate);">--</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ "%.1f"|format(log.weight_kg) if log.weight_kg else '--' }} <small style="color: var(--slate);">kg</small></td>
+                    <td>
+                        <div style="display: flex; gap: 8px;">
+                            <a href="{{ url_for('logs.edit', id=log.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">
+                                <i data-lucide="edit-2" style="width: 14px; height: 14px;"></i>
+                            </a>
+                            <a href="{{ url_for('logs.delete', id=log.id) }}" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="return confirm('{{ _('Are you sure?') }}')">
+                                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div style="text-align: center; padding: 48px; color: var(--slate);">
+            <i data-lucide="clipboard-list" style="width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.2;"></i>
+            <p>{{ _("You haven't recorded any health logs yet.") }}</p>
+            <a href="{{ url_for('logs.create') }}" class="btn btn-secondary">{{ _('Record My First Log') }}</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

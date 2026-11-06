@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>500 {{ _('Server Error') }}</h3>{% endblock %}
+{% block content %}
+<div class="card" style="text-align: center; padding: 40px;">
+    <h1 style="color: #e74c3c; font-size: 4em; margin-bottom: 10px;">500</h1>
+    <h2>{{ _('Server Error') }}</h2>
+    <p style="color: #666; margin-bottom: 30px;">{{ _('Something went wrong on our end. Please try again later.') }}</p>
+    <a href="{{ url_for('main.index') }}" class="btn">{{ _('Return Home') }}</a>
+</div>
+{% endblock %}

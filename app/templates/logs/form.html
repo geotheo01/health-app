@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block page_title %}<h3>{{ _('Edit Daily Log') if log else _('New Daily Log') }}</h3>{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div style="margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 20px;">
+        <h2 style="margin: 0; display: flex; align-items: center; gap: 12px;">
+            <i data-lucide="clipboard-edit" style="color: var(--teal);"></i>
+            {{ _('Track Your Daily Progress') }}
+        </h2>
+        <p style="color: var(--slate); margin-top: 8px;">{{ _('Recording your data daily helps our AI advisor give better recommendations.') }}</p>
+    </div>
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <div class="form-group" style="max-width: 300px; margin-bottom: 32px;">
+            <label style="font-weight: 700; color: var(--navy);">
+                <i data-lucide="calendar" style="width: 16px; color: var(--teal);"></i> {{ _('Log Date') }}
+            </label>
+            {% if not log %}
+                <input type="date" name="log_date" value="{{ today }}" required style="font-weight: 600;">
+            {% else %}
+                <div style="padding: 12px 16px; background: var(--off-white); border-radius: var(--radius); border: 1px solid var(--border); font-weight: 700; color: var(--navy-light);">
+                    {{ log.log_date.strftime('%d/%m/%Y') if current_lang == 'el' else log.log_date.strftime('%B %d, %Y') }}
+                </div>
+                <input type="hidden" name="log_date" value="{{ log.log_date.strftime('%Y-%m-%d') }}">
+            {% endif %}
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px;">
+            <!-- Sleep & Water -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <div class="form-group">
+                    <label><i data-lucide="moon" style="width: 16px;"></i> {{ _('Sleep Duration (Hours)') }}</label>
+                    <input type="number" step="0.1" name="sleep_hours" value="{{ log.sleep_hours if log else '' }}" min="0" max="24" placeholder="e.g. 7.5">
+                </div>
+                <div class="form-group">
+                    <label><i data-lucide="droplet" style="width: 16px;"></i> {{ _('Water Intake (Liters)') }}</label>
+                    <input type="number" step="0.1" name="water_liters" value="{{ log.water_liters if log else '' }}" min="0" placeholder="e.g. 2.0">
+                </div>
+            </div>
+
+            <!-- Exercise & Mood -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <div class="form-group">
+                    <label><i data-lucide="zap" style="width: 16px;"></i> {{ _('Exercise (Minutes)') }}</label>
+                    <input type="number" name="exercise_minutes" value="{{ log.exercise_minutes if log else '' }}" min="0" placeholder="e.g. 30">
+                </div>
+                <div class="form-group">
+                    <label><i data-lucide="smile" style="width: 16px;"></i> {{ _('Mood Score (1-10)') }}</label>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <input type="range" name="mood_score" min="1" max="10" value="{{ log.mood_score if log else '5' }}" 
+                               style="flex: 1; accent-color: var(--teal);" oninput="this.nextElementSibling.value = this.value">
+                        <output style="font-weight: 800; font-size: 1.25rem; color: var(--teal); min-width: 2ch;">{{ log.mood_score if log else '5' }}</output>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; margin-top: 24px;">
+            <div class="form-group">
+                <label><i data-lucide="scale" style="width: 16px;"></i> {{ _('Current Weight (kg)') }}</label>
+                <input type="number" step="0.1" name="weight_kg" value="{{ log.weight_kg if log else '' }}" placeholder="e.g. 70.5">
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 24px;">
+            <label><i data-lucide="sticky-note" style="width: 16px;"></i> {{ _('Daily Notes (Optional)') }}</label>
+            <textarea name="notes" rows="4" placeholder="{{ _('How was your day? Any specific feeling or event?') }}">{{ log.notes if log else '' }}</textarea>
+        </div>
+
+        <div style="display: flex; gap: 16px; border-top: 1px solid var(--border); padding-top: 32px; margin-top: 32px;">
+            <button type="submit" class="btn" style="padding: 12px 32px; font-size: 1rem;">
+                <i data-lucide="save"></i> {{ _('Save Log') }}
+            </button>
+            <a href="{{ url_for('logs.list_logs') }}" class="btn btn-secondary" style="padding: 12px 32px; font-size: 1rem;">
+                {{ _('Cancel') }}
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

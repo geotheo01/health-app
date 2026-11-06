@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ _('Health & Nutrition Report') }} - {{ user.full_name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='1.2') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            background-color: var(--background);
+            padding: 40px 20px;
+        }
+        .report-preview-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            padding: 40px;
+            border: 1px solid var(--border);
+        }
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        @media print {
+            body {
+                background-color: white !important;
+                padding: 0 !important;
+            }
+            .report-preview-container {
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+            }
+            .action-bar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-preview-container">
+        <!-- Action Bar (hidden when printing) -->
+        <div class="action-bar">
+            <div>
+                <a href="{{ request.referrer or url_for('history.index') }}" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <i data-lucide="arrow-left"></i>
+                    <span>{{ _('Close Preview') }}</span>
+                </a>
+            </div>
+            <button onclick="window.print()" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i data-lucide="printer"></i>
+                <span>{{ _('Print Report') }}</span>
+            </button>
+        </div>
+
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
+            <div>
+                <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--teal); margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="activity"></i>
+                    {{ _('Smart Health Tracker') }}
+                </h1>
+                <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin: 8px 0 0 0;">
+                    {{ _('Health & Nutrition Report') }}
+                </h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 4px 0 0 0;">
+                    {{ _('Report generated on') }} {{ generation_time }}
+                </p>
+            </div>
+            <div style="text-align: right;">
+                <h3 style="font-weight: 700; color: var(--text-main); margin: 0;">{{ user.full_name }}</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 4px 0 0 0;">
+                    {{ _('Role: User') if user.role == 'user' else _('Role: Admin') }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Meta Summary -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 32px; background-color: var(--background); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+            <div>
+                <h4 style="font-weight: 700; color: var(--text-main); margin-bottom: 8px;">{{ _('Report Range') }}</h4>
+                <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">
+                    {{ data.start_date.strftime('%d/%m/%Y') }} - {{ data.end_date.strftime('%d/%m/%Y') }}
+                    ({{ _('Weekly Summary') if current_range == '7days' else _('Monthly Summary') if current_range == '30days' else _('Custom Range') }})
+                </p>
+            </div>
+            <div style="text-align: right;">
+                <h4 style="font-weight: 700; color: var(--text-main); margin-bottom: 8px;">{{ _('Current Wellness Score') }}</h4>
+                <p style="margin: 0; font-size: 1.3rem; font-weight: 800; color: var(--teal);">
+                    {{ dash_data.wellness.total_score }} / 100
+                </p>
+            </div>
+        </div>
+
+        <!-- Averages Summary Cards -->
+        <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="award" style="color: var(--teal);"></i>
+            {{ _('Daily Averages') }}
+        </h3>
+        
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px;">
+            <div class="card" style="padding: 16px; text-align: center;">
+                <span style="font-size: 0.8rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600;">{{ _('Calories') }}</span>
+                <span style="font-size: 1.25rem; font-weight: 800; color: var(--teal); display: block; margin-top: 6px;">{{ avg_calories|round(0)|int }} kcal</span>
+            </div>
+            <div class="card" style="padding: 16px; text-align: center;">
+                <span style="font-size: 0.8rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600;">{{ _('Sleep') }}</span>
+                <span style="font-size: 1.25rem; font-weight: 800; color: var(--teal); display: block; margin-top: 6px;">{{ avg_sleep|round(1) }} h</span>
+            </div>
+            <div class="card" style="padding: 16px; text-align: center;">
+                <span style="font-size: 0.8rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600;">{{ _('Water') }}</span>
+                <span style="font-size: 1.25rem; font-weight: 800; color: var(--teal); display: block; margin-top: 6px;">{{ avg_water|round(2) }} L</span>
+            </div>
+            <div class="card" style="padding: 16px; text-align: center;">
+                <span style="font-size: 0.8rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600;">{{ _('Exercise') }}</span>
+                <span style="font-size: 1.25rem; font-weight: 800; color: var(--teal); display: block; margin-top: 6px;">{{ avg_exercise|round(0)|int }} min</span>
+            </div>
+        </div>
+
+        <!-- History Details Table -->
+        <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="list" style="color: var(--teal);"></i>
+            {{ _('Daily Breakdown') }}
+        </h3>
+        
+        <div class="table-container" style="border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: none;">
+            <table>
+                <thead>
+                    <tr style="background-color: var(--background);">
+                        <th style="padding: 12px 16px; text-align: left;">{{ _('Date') }}</th>
+                        <th style="padding: 12px 16px; text-align: center;">{{ _('Calories') }}</th>
+                        <th style="padding: 12px 16px; text-align: center;">{{ _('Sleep') }}</th>
+                        <th style="padding: 12px 16px; text-align: center;">{{ _('Water') }}</th>
+                        <th style="padding: 12px 16px; text-align: center;">{{ _('Exercise') }}</th>
+                        <th style="padding: 12px 16px; text-align: center;">{{ _('Mood') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day in data.history %}
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 12px 16px; font-weight: 600;">{{ day.date.strftime('%d/%m/%Y') }}</td>
+                        <td style="padding: 12px 16px; text-align: center;">{{ day.total_calories|round|int }} kcal</td>
+                        <td style="padding: 12px 16px; text-align: center;">{{ day.sleep|round(1) }} h</td>
+                        <td style="padding: 12px 16px; text-align: center;">{{ day.water|round(2) }} L</td>
+                        <td style="padding: 12px 16px; text-align: center;">{{ day.exercise }} min</td>
+                        <td style="padding: 12px 16px; text-align: center;">{{ day.log.mood_score|default('-') }} / 10</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer signature -->
+        <div style="margin-top: 56px; border-top: 1px solid var(--border); padding-top: 20px; text-align: center; font-size: 0.8rem; color: var(--text-muted);">
+            <p>{{ _('Smart Health Tracker Report. Establish consistent logging and active healthy routines.') }}</p>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
